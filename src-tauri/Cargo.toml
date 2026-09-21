@@ -72,3 +72,7 @@ path = "../tests/core/capabilities.rs"
 [[test]]
 name = "pause"
 path = "../tests/core/pause.rs"
+
+[[test]]
+name = "interest_inbox"
+path = "../tests/core/interest_inbox.rs"

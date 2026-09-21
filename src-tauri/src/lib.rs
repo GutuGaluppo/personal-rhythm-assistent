@@ -1,5 +1,6 @@
 pub mod app;
 pub mod context;
+pub mod interest_inbox;
 pub mod interventions;
 pub mod persistence;
 pub mod platform;
@@ -136,6 +137,12 @@ pub fn run() {
             app::commands::start_pause,
             app::commands::end_pause,
             app::commands::open_pause,
+            app::commands::list_interests,
+            app::commands::add_interest,
+            app::commands::archive_interest,
+            app::commands::restore_interest,
+            app::commands::delete_interest,
+            app::commands::get_interest_suggestion,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Personal Rhythm Assistant");

@@ -27,6 +27,12 @@ const COMMANDS: &[&str] = &[
     "start_pause",
     "end_pause",
     "open_pause",
+    "list_interests",
+    "add_interest",
+    "archive_interest",
+    "restore_interest",
+    "delete_interest",
+    "get_interest_suggestion",
 ];
 
 fn main() {

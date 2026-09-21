@@ -1,5 +1,5 @@
 //! Menu bar / tray (IMPLEMENTATION.md §16). Commands are added by the milestones
-//! that own them; this one owns "Take a break", "I'm on fire" and "Silence".
+//! that own them. Order follows §16: rhythm, break, on fire, inbox, open, silence.
 
 use crate::interventions::pause::{PauseKind, PauseService};
 use crate::policy::service::{PolicyService, PolicyView};
@@ -10,8 +10,10 @@ use std::time::Duration;
 use tauri::image::Image;
 use tauri::menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::TrayIconBuilder;
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Emitter, Manager};
 
+pub const MENU_RHYTHM: &str = "how_is_my_rhythm";
+pub const MENU_INBOX: &str = "interest_inbox";
 pub const MENU_BREAK: &str = "take_a_break";
 pub const MENU_ON_FIRE: &str = "on_fire";
 pub const MENU_OPEN: &str = "open";
@@ -95,6 +97,7 @@ pub fn install(
     pause: Arc<PauseService>,
 ) -> tauri::Result<()> {
     let view = policy.view(Utc::now(), local_day_start(Utc::now())).ok();
+    let rhythm = MenuItem::with_id(app, MENU_RHYTHM, "How is my rhythm?", true, None::<&str>)?;
     let take_break = MenuItem::with_id(app, MENU_BREAK, "Take a break", true, None::<&str>)?;
     let on_fire = CheckMenuItem::with_id(
         app,
@@ -104,6 +107,7 @@ pub fn install(
         view.as_ref().is_some_and(|v| v.on_fire_until.is_some()),
         None::<&str>,
     )?;
+    let inbox = MenuItem::with_id(app, MENU_INBOX, "Interest Inbox", true, None::<&str>)?;
     let open = MenuItem::with_id(app, MENU_OPEN, "Open app", true, None::<&str>)?;
     let silence = CheckMenuItem::with_id(
         app,
@@ -117,8 +121,10 @@ pub fn install(
     let menu = Menu::with_items(
         app,
         &[
+            &rhythm,
             &take_break,
             &on_fire,
+            &inbox,
             &open,
             &silence,
             &PredefinedMenuItem::separator(app)?,
@@ -136,6 +142,8 @@ pub fn install(
         .on_menu_event(move |app, event| {
             let now = Utc::now();
             match event.id.as_ref() {
+                MENU_RHYTHM => show_main(app, Some("my-day")),
+                MENU_INBOX => show_main(app, Some("interest-inbox")),
                 MENU_BREAK => h_pause.offer(PauseKind::Silence),
                 MENU_ON_FIRE => {
                     let on = !h_policy
@@ -147,12 +155,7 @@ pub fn install(
                     let on = !h_policy.state().is_ok_and(|s| s.silent);
                     let _ = h_policy.set_silent(on);
                 }
-                MENU_OPEN => {
-                    if let Some(window) = app.get_webview_window("main") {
-                        let _ = window.show();
-                        let _ = window.set_focus();
-                    }
-                }
+                MENU_OPEN => show_main(app, None),
                 MENU_QUIT => app.exit(0),
                 _ => {}
             }
@@ -169,4 +172,16 @@ pub fn install(
         })
         .expect("spawn tray sync thread");
     Ok(())
+}
+
+/// Brings the main window forward, optionally on a specific page (the app listens
+/// for the `navigate` event).
+fn show_main(app: &AppHandle, page: Option<&str>) {
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.show();
+        let _ = window.set_focus();
+    }
+    if let Some(page) = page {
+        let _ = app.emit_to("main", "navigate", page);
+    }
 }

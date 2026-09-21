@@ -1,10 +1,12 @@
 use crate::context;
 use crate::context::engine::ContextConfig;
 use crate::context::signals::ContextAssessment;
+use crate::interest_inbox;
 use crate::interventions::manager::InterventionManager;
 use crate::interventions::model::{Answer, InterventionView};
 use crate::interventions::pause::{PauseKind, PauseService, PauseView};
 use crate::persistence::repositories::activity_events;
+use crate::persistence::repositories::interests::Interest;
 use crate::persistence::Database;
 use crate::policy::rules::PolicyDecision;
 use crate::policy::service::{PolicyService, PolicyView};
@@ -256,4 +258,46 @@ pub fn end_pause(pause: State<'_, Arc<PauseService>>) {
 #[tauri::command]
 pub fn open_pause(pause: State<'_, Arc<PauseService>>) {
     pause.offer(PauseKind::Silence);
+}
+
+// ---- Interest Inbox ----
+
+#[tauri::command]
+pub fn list_interests(
+    db: State<'_, Arc<Database>>,
+    archived: bool,
+) -> Result<Vec<Interest>, String> {
+    db.with_conn(|c| interest_inbox::list(c, archived))
+        .map_err(err)
+}
+
+#[tauri::command]
+pub fn add_interest(db: State<'_, Arc<Database>>, text: String) -> Result<Interest, String> {
+    db.with_conn(|c| interest_inbox::add(c, &text, chrono::Utc::now()))
+        .map_err(err)
+}
+
+#[tauri::command]
+pub fn archive_interest(db: State<'_, Arc<Database>>, id: i64) -> Result<bool, String> {
+    db.with_conn(|c| interest_inbox::archive(c, id, chrono::Utc::now()))
+        .map_err(err)
+}
+
+#[tauri::command]
+pub fn restore_interest(db: State<'_, Arc<Database>>, id: i64) -> Result<bool, String> {
+    db.with_conn(|c| interest_inbox::restore(c, id))
+        .map_err(err)
+}
+
+#[tauri::command]
+pub fn delete_interest(db: State<'_, Arc<Database>>, id: i64) -> Result<bool, String> {
+    db.with_conn(|c| interest_inbox::delete(c, id)).map_err(err)
+}
+
+/// One suggestion per local day; the same one all day.
+#[tauri::command]
+pub fn get_interest_suggestion(db: State<'_, Arc<Database>>) -> Result<Option<Interest>, String> {
+    let today = chrono::Local::now().format("%Y-%m-%d").to_string();
+    db.with_conn(|c| interest_inbox::suggestion_for(c, &today))
+        .map_err(err)
 }

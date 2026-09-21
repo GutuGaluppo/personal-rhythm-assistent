@@ -19,6 +19,7 @@ beforeEach(() => {
     lastBreak: null,
   });
   vi.mocked(commands.listAppMappings).mockResolvedValue([]);
+  vi.mocked(commands.getInterestSuggestion).mockResolvedValue(null);
 });
 
 describe("App", () => {
@@ -43,6 +44,6 @@ describe("App", () => {
     renderWithProviders(<App />);
     const nav = within(screen.getByRole("navigation", { name: "Main" }));
     const labels = nav.getAllByRole("button").map((b) => b.textContent);
-    expect(labels).toEqual(["My Day", "Settings", "Context (developer)"]);
+    expect(labels).toEqual(["My Day", "Interest Inbox", "Settings", "Context (developer)"]);
   });
 });

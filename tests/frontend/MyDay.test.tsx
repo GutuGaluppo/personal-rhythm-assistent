@@ -22,6 +22,10 @@ const base: MyDayData = {
   lastBreak: { minutes: 25, endedMinutesAgo: 96 },
 };
 
+beforeEach(() => {
+  vi.mocked(commands.getInterestSuggestion).mockResolvedValue(null);
+});
+
 function show(day: Partial<MyDayData> = {}) {
   vi.mocked(commands.getMyDay).mockResolvedValue({ ...base, ...day });
   renderWithProviders(<MyDay />);

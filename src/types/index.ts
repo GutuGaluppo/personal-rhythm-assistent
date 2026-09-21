@@ -119,3 +119,10 @@ export type PauseView = {
   endsAt: string | null;
   durationSeconds: number | null;
 };
+
+export type Interest = {
+  id: number;
+  text: string;
+  createdAt: string;
+  archivedAt: string | null;
+};

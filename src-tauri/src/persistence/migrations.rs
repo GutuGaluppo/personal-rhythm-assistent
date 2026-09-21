@@ -9,6 +9,7 @@ const MIGRATIONS: &[&str] = &[
     include_str!("../../migrations/0001_initial.sql"),
     include_str!("../../migrations/0002_app_category_mappings.sql"),
     include_str!("../../migrations/0003_interventions.sql"),
+    include_str!("../../migrations/0004_interests.sql"),
 ];
 
 pub fn latest_version() -> usize {

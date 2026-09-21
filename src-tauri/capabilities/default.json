@@ -22,6 +22,12 @@
     "allow-set-on-fire",
     "allow-get-policy-debug",
     "allow-debug-show-intervention",
-    "allow-open-pause"
+    "allow-open-pause",
+    "allow-list-interests",
+    "allow-add-interest",
+    "allow-archive-interest",
+    "allow-restore-interest",
+    "allow-delete-interest",
+    "allow-get-interest-suggestion"
   ]
 }

@@ -1,7 +1,7 @@
 //! Milestone 8: the pause timer is a deadline kept in the core, so it survives
 //! anything that happens to a window; and the menu bar shows the state in words.
 
-use chrono::{DateTime, Duration, TimeZone, Utc};
+use chrono::{DateTime, TimeZone, Utc};
 use personal_rhythm_assistant_lib::app::tray::{tooltip, tray_state, TrayState};
 use personal_rhythm_assistant_lib::interventions::pause::{
     PauseError, PauseKind, PausePhase, PausePresenter, PauseService, MAX_MINUTES, MIN_MINUTES,
@@ -292,5 +292,4 @@ fn the_state_icons_exist_and_are_real_pngs() {
         .map(|n| std::fs::read(dir.join(format!("{n}.png"))).unwrap())
         .collect();
     assert_eq!(all.len(), 4);
-    let _ = Duration::zero();
 }
