@@ -13,6 +13,7 @@ use persistence::Database;
 use sensors::bus::EventBus;
 use sensors::collector::Collector;
 use sensors::service::{SensorService, SharedSnapshot};
+use sessions::classification::Classification;
 use sessions::service::SessionService;
 use sessions::sessionizer::{SessionConfig, Sessionizer};
 use std::sync::{Arc, Mutex};
@@ -55,8 +56,13 @@ pub fn run() {
             )
             .spawn();
 
+            let classification = Arc::new(db.with_conn(Classification::load)?);
+            let classifier = classification.clone();
             let sessions = Arc::new(Mutex::new(SessionService::new(
-                Sessionizer::new(SessionConfig::default()),
+                Sessionizer::with_classifier(
+                    SessionConfig::default(),
+                    Box::new(move |app| classifier.category_for(app)),
+                ),
                 db.clone(),
                 snapshot.clone(),
             )));
@@ -64,6 +70,7 @@ pub fn run() {
 
             app.manage(db);
             app.manage(sessions);
+            app.manage(classification);
             app.manage(bus);
             app.manage(snapshot);
 
@@ -78,6 +85,10 @@ pub fn run() {
             app::commands::set_privacy_toggles,
             app::commands::get_sensor_state,
             app::commands::get_current_session,
+            app::commands::get_my_day,
+            app::commands::list_app_mappings,
+            app::commands::set_app_category,
+            app::commands::reset_app_category,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Personal Rhythm Assistant");

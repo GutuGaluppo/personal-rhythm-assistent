@@ -45,6 +45,34 @@ pub fn list_range(conn: &Connection, from: &str, to: &str) -> Result<Vec<Activit
     rows.map(|r| r?).collect()
 }
 
+/// Every application seen in the retained events, with its most recent display name.
+pub fn distinct_applications(conn: &Connection) -> Result<Vec<(String, String)>> {
+    let mut stmt = conn.prepare(
+        "SELECT bundle_id, application_name FROM activity_events
+         WHERE type = 'active_application' AND id IN (
+             SELECT MAX(id) FROM activity_events WHERE type = 'active_application' GROUP BY bundle_id)
+         ORDER BY application_name COLLATE NOCASE",
+    )?;
+    let rows = stmt.query_map([], |r| Ok((r.get(0)?, r.get(1)?)))?;
+    Ok(rows.collect::<std::result::Result<_, _>>()?)
+}
+
+/// The most recent idle period of at least `min_seconds`, as (start, length in seconds).
+pub fn latest_idle_at_least(conn: &Connection, min_seconds: u32) -> Result<Option<(String, u32)>> {
+    Ok(conn
+        .query_row(
+            "SELECT timestamp, seconds FROM activity_events
+             WHERE type = 'idle' AND seconds >= ?1 ORDER BY timestamp DESC LIMIT 1",
+            [min_seconds],
+            |r| Ok((r.get(0)?, r.get(1)?)),
+        )
+        .map(Some)
+        .or_else(|e| match e {
+            rusqlite::Error::QueryReturnedNoRows => Ok(None),
+            other => Err(other),
+        })?)
+}
+
 pub fn count(conn: &Connection) -> Result<u64> {
     Ok(conn.query_row("SELECT COUNT(*) FROM activity_events", [], |r| r.get(0))?)
 }

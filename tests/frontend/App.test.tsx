@@ -1,9 +1,47 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { App } from "@/app/App";
+import * as commands from "@/lib/tauri/commands";
+import { useNavigation } from "@/stores/navigation";
+import { renderWithProviders } from "./utils";
+
+vi.mock("@/lib/tauri/commands");
+
+beforeEach(() => {
+  useNavigation.setState({ page: "my-day" });
+  vi.mocked(commands.getMyDay).mockResolvedValue({
+    trackingEnabled: true,
+    state: "active",
+    frontmostApplication: null,
+    currentSession: null,
+    activeMinutesToday: 0,
+    contextSwitchesToday: 0,
+    lastBreak: null,
+  });
+  vi.mocked(commands.listAppMappings).mockResolvedValue([]);
+});
 
 describe("App", () => {
-  it("renders the main window heading", () => {
-    render(<App />);
-    expect(screen.getByRole("heading", { name: /personal rhythm assistant/i })).toBeInTheDocument();
+  it("opens on My Day", async () => {
+    renderWithProviders(<App />);
+    expect(await screen.findByRole("heading", { name: "My Day", level: 1 })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "My Day" })).toHaveAttribute("aria-current", "page");
+  });
+
+  it("navigates with the keyboard-reachable menu", async () => {
+    renderWithProviders(<App />);
+    await userEvent.click(screen.getByRole("button", { name: "Settings" }));
+    expect(await screen.findByRole("heading", { name: "Settings", level: 1 })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Settings" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(screen.getByRole("button", { name: "My Day" })).not.toHaveAttribute("aria-current");
+  });
+
+  it("only offers pages that exist", () => {
+    renderWithProviders(<App />);
+    const labels = screen.getAllByRole("button").map((b) => b.textContent);
+    expect(labels).toEqual(["My Day", "Settings"]);
   });
 });

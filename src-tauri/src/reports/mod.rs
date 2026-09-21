@@ -1,1 +1,3 @@
-// Implemented in a later milestone; see docs/MILESTONES.md.
+//! Read models built from stored sessions. Deterministic; never scores the user.
+
+pub mod my_day;

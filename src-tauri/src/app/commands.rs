@@ -1,10 +1,14 @@
+use crate::persistence::repositories::activity_events;
 use crate::persistence::Database;
 use crate::privacy::retention::{self, RetentionPolicy};
 use crate::privacy::toggles::{self, PrivacyToggles};
+use crate::reports::my_day::{self, MyDay};
 use crate::sensors::service::SharedSnapshot;
 use crate::sensors::system_state::SensorSnapshot;
-use crate::sessions::model::Session;
+use crate::sessions::classification::{AppMapping, Classification};
+use crate::sessions::model::{Category, Session};
 use crate::sessions::service::SessionService;
+use crate::sessions::sessionizer::SessionConfig;
 use std::sync::{Arc, Mutex};
 use tauri::State;
 
@@ -60,5 +64,60 @@ pub fn get_current_session(
         .lock()
         .unwrap()
         .refresh(chrono::Utc::now())
+        .map_err(err)
+}
+
+#[tauri::command]
+pub fn get_my_day(
+    db: State<'_, Arc<Database>>,
+    sessions: State<'_, Arc<Mutex<SessionService>>>,
+    snapshot: State<'_, SharedSnapshot>,
+) -> Result<MyDay, String> {
+    let now = chrono::Utc::now();
+    let service = sessions.lock().unwrap();
+    my_day::load(
+        &db,
+        &service,
+        &snapshot,
+        now,
+        my_day::local_day_start(now),
+        SessionConfig::default().break_gap_secs as u32,
+    )
+    .map_err(err)
+}
+
+#[tauri::command]
+pub fn list_app_mappings(
+    db: State<'_, Arc<Database>>,
+    classification: State<'_, Arc<Classification>>,
+) -> Result<Vec<AppMapping>, String> {
+    db.with_conn(|conn| classification.list_mappings(conn))
+        .map_err(err)
+}
+
+#[tauri::command]
+pub fn set_app_category(
+    db: State<'_, Arc<Database>>,
+    classification: State<'_, Arc<Classification>>,
+    bundle_id: String,
+    category: Category,
+) -> Result<(), String> {
+    db.with_conn(|conn| {
+        let name = activity_events::distinct_applications(conn)?
+            .into_iter()
+            .find(|(id, _)| *id == bundle_id)
+            .map(|(_, name)| name);
+        classification.set(conn, &bundle_id, name.as_deref(), category)
+    })
+    .map_err(err)
+}
+
+#[tauri::command]
+pub fn reset_app_category(
+    db: State<'_, Arc<Database>>,
+    classification: State<'_, Arc<Classification>>,
+    bundle_id: String,
+) -> Result<(), String> {
+    db.with_conn(|conn| classification.reset(conn, &bundle_id))
         .map_err(err)
 }
