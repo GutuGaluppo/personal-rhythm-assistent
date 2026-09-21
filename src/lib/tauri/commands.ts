@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { AppMapping, Category, MyDay } from "@/types";
+import type { AppMapping, Category, ContextAssessment, MyDay } from "@/types";
 
 /** Typed wrappers around the Rust commands. Nothing else calls `invoke` directly. */
 
@@ -12,3 +12,5 @@ export const setAppCategory = (bundleId: string, category: Category) =>
 
 export const resetAppCategory = (bundleId: string) =>
   invoke<void>("reset_app_category", { bundleId });
+
+export const getContextAssessment = () => invoke<ContextAssessment>("get_context_assessment");

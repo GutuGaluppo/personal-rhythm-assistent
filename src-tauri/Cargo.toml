@@ -52,3 +52,7 @@ path = "../tests/core/classification.rs"
 [[test]]
 name = "my_day"
 path = "../tests/core/my_day.rs"
+
+[[test]]
+name = "context"
+path = "../tests/core/context.rs"

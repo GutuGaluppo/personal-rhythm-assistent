@@ -1,3 +1,6 @@
+use crate::context;
+use crate::context::engine::ContextConfig;
+use crate::context::signals::ContextAssessment;
 use crate::persistence::repositories::activity_events;
 use crate::persistence::Database;
 use crate::privacy::retention::{self, RetentionPolicy};
@@ -119,5 +122,16 @@ pub fn reset_app_category(
     bundle_id: String,
 ) -> Result<(), String> {
     db.with_conn(|conn| classification.reset(conn, &bundle_id))
+        .map_err(err)
+}
+
+/// Developer view: the signals and the evidence behind them, right now.
+#[tauri::command]
+pub fn get_context_assessment(
+    db: State<'_, Arc<Database>>,
+    sessions: State<'_, Arc<Mutex<SessionService>>>,
+) -> Result<ContextAssessment, String> {
+    let service = sessions.lock().unwrap();
+    context::service::assess_now(&db, &service, &ContextConfig::default(), chrono::Utc::now())
         .map_err(err)
 }

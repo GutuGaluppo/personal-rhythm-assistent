@@ -45,3 +45,24 @@ export type AppMapping = {
   category: Category;
   source: MappingSource;
 };
+
+export type SignalKind =
+  "continuous_activity" | "insufficient_idle" | "rapid_switching" | "create_dominance";
+
+export type Signal = {
+  kind: SignalKind;
+  active: boolean;
+  evidence: {
+    measured: number;
+    threshold: number;
+    unit: "minutes" | "ratio" | "per_hour";
+    explanation: string;
+  };
+};
+
+export type ContextAssessment = {
+  assessedAt: string;
+  signals: Signal[];
+  activeSignalCount: number;
+  decision: "observe" | "candidate_intervention";
+};

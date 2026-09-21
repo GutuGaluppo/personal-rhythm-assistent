@@ -39,9 +39,9 @@ describe("App", () => {
     expect(screen.getByRole("button", { name: "My Day" })).not.toHaveAttribute("aria-current");
   });
 
-  it("only offers pages that exist", () => {
+  it("only offers pages that exist (plus the developer view in development)", () => {
     renderWithProviders(<App />);
     const labels = screen.getAllByRole("button").map((b) => b.textContent);
-    expect(labels).toEqual(["My Day", "Settings"]);
+    expect(labels).toEqual(["My Day", "Settings", "Context (developer)"]);
   });
 });

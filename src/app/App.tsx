@@ -1,14 +1,15 @@
-import { PAGES, useNavigation } from "@/stores/navigation";
+import { pagesFor, useNavigation } from "@/stores/navigation";
 import { Page } from "./router";
 import styles from "./App.module.css";
 
 export function App() {
   const { page, go } = useNavigation();
+  const pages = pagesFor(import.meta.env.DEV);
   return (
     <div className={styles.shell}>
       <nav aria-label="Main" className={styles.nav}>
         <span className={styles.brand}>Personal Rhythm Assistant</span>
-        {PAGES.map((p) => (
+        {pages.map((p) => (
           <button
             key={p.id}
             type="button"

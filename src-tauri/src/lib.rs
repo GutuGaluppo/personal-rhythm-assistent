@@ -89,6 +89,7 @@ pub fn run() {
             app::commands::list_app_mappings,
             app::commands::set_app_category,
             app::commands::reset_app_category,
+            app::commands::get_context_assessment,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Personal Rhythm Assistant");
