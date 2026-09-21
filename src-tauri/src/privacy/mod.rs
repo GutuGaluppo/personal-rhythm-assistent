@@ -1,1 +1,3 @@
-// Implemented in a later milestone; see docs/MILESTONES.md.
+//! Privacy controls. Retention arrives with Milestone 1; permissions with Milestone 12.
+
+pub mod retention;

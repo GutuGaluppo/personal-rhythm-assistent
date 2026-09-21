@@ -1,1 +1,3 @@
-// Implemented in a later milestone; see docs/MILESTONES.md.
+//! Sessions (IMPLEMENTATION.md §8). The Sessionizer arrives in Milestone 3.
+
+pub mod model;

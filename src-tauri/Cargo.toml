@@ -18,8 +18,16 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 # SQLite: bundled so the app has no system dependency and works offline.
 rusqlite = { version = "0.32", features = ["bundled"] }
+chrono = { version = "0.4.45", default-features = false, features = ["clock", "std"] }
 
 # Rust tests live in the top-level tests/ tree (IMPLEMENTATION.md §25).
 [[test]]
 name = "sqlite_smoke"
 path = "../tests/core/sqlite_smoke.rs"
+
+[dev-dependencies]
+tempfile = "3.27.0"
+
+[[test]]
+name = "persistence"
+path = "../tests/core/persistence.rs"
