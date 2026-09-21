@@ -93,6 +93,45 @@ fn no_frontmost_app_emits_nothing() {
     assert!(c.tick(at(0), &on(), None, Some(0.0)).is_empty());
 }
 
+// ---- collector: heartbeat ---------------------------------------------------
+
+fn is_active_event_for(e: &ActivityEvent, id: &str) -> bool {
+    matches!(e, ActivityEvent::ActiveApplication { bundle_id, .. } if bundle_id == id)
+}
+
+#[test]
+fn an_unchanged_app_is_re_reported_every_five_minutes() {
+    let mut c = Collector::with_defaults(vec![]);
+    c.tick(at(0), &on(), app(VSCODE), Some(0.0));
+    assert!(
+        c.tick(at(299), &on(), app(VSCODE), Some(0.0)).is_empty(),
+        "not yet due"
+    );
+
+    let events = c.tick(at(300), &on(), app(VSCODE), Some(0.0));
+    assert_eq!(events.len(), 1, "a heartbeat is not a switch");
+    assert!(is_active_event_for(&events[0], VSCODE));
+    assert!(c.tick(at(301), &on(), app(VSCODE), Some(0.0)).is_empty());
+    assert_eq!(c.tick(at(600), &on(), app(VSCODE), Some(0.0)).len(), 1);
+}
+
+#[test]
+fn no_heartbeat_while_the_user_is_idle() {
+    let mut c = Collector::with_defaults(vec![]);
+    c.tick(at(0), &on(), app(VSCODE), Some(0.0));
+    c.tick(at(130), &on(), app(VSCODE), Some(130.0)); // idle threshold crossed
+    assert!(c.tick(at(400), &on(), app(VSCODE), Some(400.0)).is_empty());
+}
+
+#[test]
+fn heartbeat_continues_for_the_previous_app_while_this_app_is_in_front() {
+    let mut c = Collector::with_defaults(vec![OWN.into()]);
+    c.tick(at(0), &on(), app(VSCODE), Some(0.0));
+    let events = c.tick(at(300), &on(), app(OWN), Some(0.0));
+    assert_eq!(events.len(), 1);
+    assert!(is_active_event_for(&events[0], VSCODE));
+}
+
 // ---- collector: idle ------------------------------------------------------
 
 #[test]

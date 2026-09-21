@@ -13,19 +13,27 @@ use persistence::Database;
 use sensors::bus::EventBus;
 use sensors::collector::Collector;
 use sensors::service::{SensorService, SharedSnapshot};
-use std::sync::Arc;
+use sessions::service::SessionService;
+use sessions::sessionizer::{SessionConfig, Sessionizer};
+use std::sync::{Arc, Mutex};
 use tauri::Manager;
 
 /// Must match `identifier` in tauri.conf.json. This app's own windows are not user activity.
 const OWN_BUNDLE_ID: &str = "app.personalrhythm.assistant";
 
-/// Identities this app can have in the frontmost-app probe: its bundle id when
-/// packaged, or the `name:` fallback for an unbundled dev binary.
-fn own_app_ids() -> Vec<String> {
-    vec![
+/// System UI that takes focus when the user is away (lock screen, screen saver).
+/// It is not something the user works in, so it must not read as a context switch.
+const SYSTEM_UI_BUNDLE_IDS: [&str; 2] = ["com.apple.loginwindow", "com.apple.ScreenSaver.Engine"];
+
+/// Apps that never count as user activity: this app (by bundle id when packaged, or
+/// by the `name:` fallback for an unbundled dev binary) and system UI.
+fn ignored_app_ids() -> Vec<String> {
+    let mut ids = vec![
         OWN_BUNDLE_ID.to_string(),
         format!("name:{}", env!("CARGO_PKG_NAME")),
-    ]
+    ];
+    ids.extend(SYSTEM_UI_BUNDLE_IDS.map(String::from));
+    ids
 }
 
 pub fn run() {
@@ -40,14 +48,22 @@ pub fn run() {
             let snapshot = SharedSnapshot::default();
             SensorService::new(
                 platform::default_probe(),
-                Collector::with_defaults(own_app_ids()),
+                Collector::with_defaults(ignored_app_ids()),
                 db.clone(),
                 bus.clone(),
                 snapshot.clone(),
             )
             .spawn();
 
+            let sessions = Arc::new(Mutex::new(SessionService::new(
+                Sessionizer::new(SessionConfig::default()),
+                db.clone(),
+                snapshot.clone(),
+            )));
+            SessionService::spawn(sessions.clone());
+
             app.manage(db);
+            app.manage(sessions);
             app.manage(bus);
             app.manage(snapshot);
 
@@ -61,6 +77,7 @@ pub fn run() {
             app::commands::get_privacy_toggles,
             app::commands::set_privacy_toggles,
             app::commands::get_sensor_state,
+            app::commands::get_current_session,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Personal Rhythm Assistant");

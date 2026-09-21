@@ -1,0 +1,110 @@
+{
+ "description": "Category is the one with the most active time, not the first app or the last.",
+ "now": "2026-03-02T09:55:00.000Z",
+ "categories": {
+  "com.microsoft.VSCode": "Create",
+  "com.apple.iBooksX": "Learn"
+ },
+ "events": [
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:00:00.000Z",
+   "bundleId": "com.microsoft.VSCode",
+   "applicationName": "Code"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:05:00.000Z",
+   "bundleId": "com.microsoft.VSCode",
+   "applicationName": "Code"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:10:00.000Z",
+   "bundleId": "com.microsoft.VSCode",
+   "applicationName": "Code"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:15:00.000Z",
+   "bundleId": "com.microsoft.VSCode",
+   "applicationName": "Code"
+  },
+  {
+   "type": "application_switch",
+   "timestamp": "2026-03-02T09:20:00.000Z",
+   "fromBundleId": "com.microsoft.VSCode",
+   "toBundleId": "com.apple.iBooksX"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:20:00.000Z",
+   "bundleId": "com.apple.iBooksX",
+   "applicationName": "Books"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:25:00.000Z",
+   "bundleId": "com.apple.iBooksX",
+   "applicationName": "Books"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:30:00.000Z",
+   "bundleId": "com.apple.iBooksX",
+   "applicationName": "Books"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:35:00.000Z",
+   "bundleId": "com.apple.iBooksX",
+   "applicationName": "Books"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:40:00.000Z",
+   "bundleId": "com.apple.iBooksX",
+   "applicationName": "Books"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:45:00.000Z",
+   "bundleId": "com.apple.iBooksX",
+   "applicationName": "Books"
+  },
+  {
+   "type": "application_switch",
+   "timestamp": "2026-03-02T09:50:00.000Z",
+   "fromBundleId": "com.apple.iBooksX",
+   "toBundleId": "com.microsoft.VSCode"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:50:00.000Z",
+   "bundleId": "com.microsoft.VSCode",
+   "applicationName": "Code"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:55:00.000Z",
+   "bundleId": "com.microsoft.VSCode",
+   "applicationName": "Code"
+  }
+ ],
+ "expected": [
+  {
+   "id": "session-2026-03-02T09:00:00.000Z",
+   "startedAt": "2026-03-02T09:00:00.000Z",
+   "endedAt": null,
+   "activeMinutes": 55.0,
+   "idleMinutes": 0.0,
+   "contextSwitches": 2,
+   "category": "Learn",
+   "applicationIds": [
+    "com.microsoft.VSCode",
+    "com.apple.iBooksX"
+   ],
+   "projectId": null
+  }
+ ]
+}

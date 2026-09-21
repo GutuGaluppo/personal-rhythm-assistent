@@ -17,3 +17,9 @@ pub fn normalize(s: &str) -> Result<String> {
         .map(|t| format(t.with_timezone(&Utc)))
         .map_err(|e| PersistenceError::Invalid(format!("timestamp {s:?}: {e}")))
 }
+
+pub fn parse(s: &str) -> Result<DateTime<Utc>> {
+    DateTime::parse_from_rfc3339(s)
+        .map(|t| t.with_timezone(&Utc))
+        .map_err(|e| PersistenceError::Invalid(format!("timestamp {s:?}: {e}")))
+}

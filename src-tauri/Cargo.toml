@@ -3,7 +3,7 @@ name = "personal-rhythm-assistant"
 version = "0.1.0"
 description = "Local-first desktop companion for a healthier work rhythm"
 edition = "2021"
-rust-version = "1.77"
+rust-version = "1.82"
 
 [lib]
 name = "personal_rhythm_assistant_lib"
@@ -40,3 +40,7 @@ path = "../tests/core/persistence.rs"
 [[test]]
 name = "sensors"
 path = "../tests/core/sensors.rs"
+
+[[test]]
+name = "sessions"
+path = "../tests/core/sessions.rs"

@@ -16,6 +16,8 @@ pub enum ActivityState {
 pub struct SensorSnapshot {
     pub state: ActivityState,
     pub frontmost_application: Option<String>,
+    /// RFC 3339 time of the last input, while the user is idle.
+    pub idle_since: Option<String>,
 }
 
 impl Default for SensorSnapshot {
@@ -23,6 +25,7 @@ impl Default for SensorSnapshot {
         Self {
             state: ActivityState::Unknown,
             frontmost_application: None,
+            idle_since: None,
         }
     }
 }

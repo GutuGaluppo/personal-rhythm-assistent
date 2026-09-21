@@ -1,0 +1,88 @@
+{
+ "description": "Idle in progress is subtracted from the open session.",
+ "now": "2026-03-02T10:00:00.000Z",
+ "liveIdleSince": "2026-03-02T09:52:00.000Z",
+ "events": [
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:00:00.000Z",
+   "bundleId": "com.microsoft.VSCode",
+   "applicationName": "Code"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:05:00.000Z",
+   "bundleId": "com.microsoft.VSCode",
+   "applicationName": "Code"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:10:00.000Z",
+   "bundleId": "com.microsoft.VSCode",
+   "applicationName": "Code"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:15:00.000Z",
+   "bundleId": "com.microsoft.VSCode",
+   "applicationName": "Code"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:20:00.000Z",
+   "bundleId": "com.microsoft.VSCode",
+   "applicationName": "Code"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:25:00.000Z",
+   "bundleId": "com.microsoft.VSCode",
+   "applicationName": "Code"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:30:00.000Z",
+   "bundleId": "com.microsoft.VSCode",
+   "applicationName": "Code"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:35:00.000Z",
+   "bundleId": "com.microsoft.VSCode",
+   "applicationName": "Code"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:40:00.000Z",
+   "bundleId": "com.microsoft.VSCode",
+   "applicationName": "Code"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:45:00.000Z",
+   "bundleId": "com.microsoft.VSCode",
+   "applicationName": "Code"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:50:00.000Z",
+   "bundleId": "com.microsoft.VSCode",
+   "applicationName": "Code"
+  }
+ ],
+ "expected": [
+  {
+   "id": "session-2026-03-02T09:00:00.000Z",
+   "startedAt": "2026-03-02T09:00:00.000Z",
+   "endedAt": null,
+   "activeMinutes": 52.0,
+   "idleMinutes": 8.0,
+   "contextSwitches": 0,
+   "category": "Unknown",
+   "applicationIds": [
+    "com.microsoft.VSCode"
+   ],
+   "projectId": null
+  }
+ ]
+}

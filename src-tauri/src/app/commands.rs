@@ -3,7 +3,9 @@ use crate::privacy::retention::{self, RetentionPolicy};
 use crate::privacy::toggles::{self, PrivacyToggles};
 use crate::sensors::service::SharedSnapshot;
 use crate::sensors::system_state::SensorSnapshot;
-use std::sync::Arc;
+use crate::sessions::model::Session;
+use crate::sessions::service::SessionService;
+use std::sync::{Arc, Mutex};
 use tauri::State;
 
 fn err(e: impl std::fmt::Display) -> String {
@@ -47,4 +49,16 @@ pub fn set_privacy_toggles(
 #[tauri::command]
 pub fn get_sensor_state(snapshot: State<'_, SharedSnapshot>) -> SensorSnapshot {
     snapshot.lock().unwrap().clone()
+}
+
+/// The session in progress, computed from the stored events right now.
+#[tauri::command]
+pub fn get_current_session(
+    service: State<'_, Arc<Mutex<SessionService>>>,
+) -> Result<Option<Session>, String> {
+    service
+        .lock()
+        .unwrap()
+        .refresh(chrono::Utc::now())
+        .map_err(err)
 }

@@ -31,6 +31,11 @@ impl IdleTracker {
         self.idle_since.is_some()
     }
 
+    /// When the current idle period began (time of the last input), once the threshold is crossed.
+    pub fn idle_since(&self) -> Option<DateTime<Utc>> {
+        self.idle_since
+    }
+
     pub fn observe(&mut self, now: DateTime<Utc>, idle_secs: f64) -> Option<ActivityEvent> {
         let last_input = now - millis(idle_secs);
         let mut event = None;

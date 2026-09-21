@@ -1,0 +1,75 @@
+{
+ "description": "A background focus change while the user is away is not a context switch.",
+ "now": "2026-03-02T09:36:00.000Z",
+ "events": [
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:00:00.000Z",
+   "bundleId": "com.microsoft.VSCode",
+   "applicationName": "Code"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:05:00.000Z",
+   "bundleId": "com.microsoft.VSCode",
+   "applicationName": "Code"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:10:00.000Z",
+   "bundleId": "com.microsoft.VSCode",
+   "applicationName": "Code"
+  },
+  {
+   "type": "idle",
+   "timestamp": "2026-03-02T09:12:00.000Z",
+   "seconds": 600
+  },
+  {
+   "type": "application_switch",
+   "timestamp": "2026-03-02T09:15:00.000Z",
+   "fromBundleId": "com.microsoft.VSCode",
+   "toBundleId": "com.apple.mail"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:15:00.000Z",
+   "bundleId": "com.apple.mail",
+   "applicationName": "Mail"
+  },
+  {
+   "type": "application_switch",
+   "timestamp": "2026-03-02T09:30:00.000Z",
+   "fromBundleId": "com.apple.mail",
+   "toBundleId": "com.microsoft.VSCode"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:30:00.000Z",
+   "bundleId": "com.microsoft.VSCode",
+   "applicationName": "Code"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:35:00.000Z",
+   "bundleId": "com.microsoft.VSCode",
+   "applicationName": "Code"
+  }
+ ],
+ "expected": [
+  {
+   "id": "session-2026-03-02T09:00:00.000Z",
+   "startedAt": "2026-03-02T09:00:00.000Z",
+   "endedAt": null,
+   "activeMinutes": 26.0,
+   "idleMinutes": 10.0,
+   "contextSwitches": 1,
+   "category": "Unknown",
+   "applicationIds": [
+    "com.microsoft.VSCode",
+    "com.apple.mail"
+   ],
+   "projectId": null
+  }
+ ]
+}

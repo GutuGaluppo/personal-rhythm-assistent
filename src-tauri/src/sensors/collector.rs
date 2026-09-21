@@ -3,6 +3,7 @@ use super::event::ActivityEvent;
 use super::idle::{IdleTracker, DEFAULT_IDLE_THRESHOLD_SECS};
 use super::probe::AppInfo;
 use super::system_state::{ActivityState, SensorSnapshot};
+use crate::persistence::time;
 use crate::privacy::toggles::PrivacyToggles;
 use chrono::{DateTime, Utc};
 
@@ -42,7 +43,7 @@ impl Collector {
             if let Some(app) = &frontmost {
                 self.frontmost_name = Some(app.name.clone());
             }
-            events.extend(self.apps.observe(now, frontmost));
+            events.extend(self.apps.observe(now, frontmost, !self.idle.is_idle()));
         } else {
             self.apps.reset();
             self.frontmost_name = None;
@@ -65,6 +66,7 @@ impl Collector {
         SensorSnapshot {
             state,
             frontmost_application: self.frontmost_name.clone(),
+            idle_since: self.idle.idle_since().map(time::format),
         }
     }
 }

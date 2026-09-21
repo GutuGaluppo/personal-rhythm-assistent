@@ -47,6 +47,20 @@ pub fn list_started_between(conn: &Connection, from: &str, to: &str) -> Result<V
     rows.map(|r| r?).collect()
 }
 
+/// `started_at` of the most recent session, if any.
+pub fn latest_started_at(conn: &Connection) -> Result<Option<String>> {
+    Ok(conn.query_row("SELECT MAX(started_at) FROM sessions", [], |r| r.get(0))?)
+}
+
+/// Sessions that have not been closed (`ended_at IS NULL`).
+pub fn list_open(conn: &Connection) -> Result<Vec<Session>> {
+    let mut stmt = conn.prepare(&format!(
+        "{SELECT} WHERE ended_at IS NULL ORDER BY started_at"
+    ))?;
+    let rows = stmt.query_map([], from_row)?;
+    rows.map(|r| r?).collect()
+}
+
 pub fn count(conn: &Connection) -> Result<u64> {
     Ok(conn.query_row("SELECT COUNT(*) FROM sessions", [], |r| r.get(0))?)
 }
