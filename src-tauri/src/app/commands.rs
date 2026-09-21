@@ -3,6 +3,8 @@ use crate::context::engine::ContextConfig;
 use crate::context::signals::ContextAssessment;
 use crate::persistence::repositories::activity_events;
 use crate::persistence::Database;
+use crate::policy::rules::PolicyDecision;
+use crate::policy::service::{PolicyService, PolicyView};
 use crate::privacy::retention::{self, RetentionPolicy};
 use crate::privacy::toggles::{self, PrivacyToggles};
 use crate::reports::my_day::{self, MyDay};
@@ -134,4 +136,47 @@ pub fn get_context_assessment(
     let service = sessions.lock().unwrap();
     context::service::assess_now(&db, &service, &ContextConfig::default(), chrono::Utc::now())
         .map_err(err)
+}
+
+#[tauri::command]
+pub fn get_policy_view(policy: State<'_, Arc<PolicyService>>) -> Result<PolicyView, String> {
+    let now = chrono::Utc::now();
+    policy.view(now, my_day::local_day_start(now)).map_err(err)
+}
+
+#[tauri::command]
+pub fn set_silence(policy: State<'_, Arc<PolicyService>>, silent: bool) -> Result<(), String> {
+    policy.set_silent(silent).map_err(err)
+}
+
+#[tauri::command]
+pub fn set_on_fire(policy: State<'_, Arc<PolicyService>>, on: bool) -> Result<(), String> {
+    policy.set_on_fire(on, chrono::Utc::now()).map_err(err)
+}
+
+#[derive(serde::Serialize)]
+pub struct PolicyDebug {
+    view: PolicyView,
+    decision: PolicyDecision,
+}
+
+/// Developer view: what the Policy Engine would do with the current evidence, and why.
+#[tauri::command]
+pub fn get_policy_debug(
+    db: State<'_, Arc<Database>>,
+    sessions: State<'_, Arc<Mutex<SessionService>>>,
+    policy: State<'_, Arc<PolicyService>>,
+) -> Result<PolicyDebug, String> {
+    let now = chrono::Utc::now();
+    let day_start = my_day::local_day_start(now);
+    let assessment = {
+        let service = sessions.lock().unwrap();
+        context::service::assess_now(&db, &service, &ContextConfig::default(), now).map_err(err)?
+    };
+    Ok(PolicyDebug {
+        view: policy.view(now, day_start).map_err(err)?,
+        decision: policy
+            .decide(now, day_start, assessment.active_signal_count)
+            .map_err(err)?,
+    })
 }

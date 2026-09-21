@@ -10,6 +10,8 @@ pub mod sensors;
 pub mod sessions;
 
 use persistence::Database;
+use policy::rules::PolicyConfig;
+use policy::service::PolicyService;
 use sensors::bus::EventBus;
 use sensors::collector::Collector;
 use sensors::service::{SensorService, SharedSnapshot};
@@ -68,13 +70,16 @@ pub fn run() {
             )));
             SessionService::spawn(sessions.clone());
 
+            let policy = Arc::new(PolicyService::new(db.clone(), PolicyConfig::default()));
+
             app.manage(db);
             app.manage(sessions);
             app.manage(classification);
             app.manage(bus);
             app.manage(snapshot);
 
-            app::tray::install(app.handle())?;
+            app::tray::install(app.handle(), policy.clone())?;
+            app.manage(policy);
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -90,6 +95,10 @@ pub fn run() {
             app::commands::set_app_category,
             app::commands::reset_app_category,
             app::commands::get_context_assessment,
+            app::commands::get_policy_view,
+            app::commands::set_silence,
+            app::commands::set_on_fire,
+            app::commands::get_policy_debug,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Personal Rhythm Assistant");

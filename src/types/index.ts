@@ -66,3 +66,26 @@ export type ContextAssessment = {
   activeSignalCount: number;
   decision: "observe" | "candidate_intervention";
 };
+
+export type SilentReason =
+  | { kind: "silent_mode" }
+  | { kind: "cooldown"; until: string }
+  | { kind: "daily_ceiling"; limit: number }
+  | { kind: "on_fire"; until: string };
+
+export type PolicyDecision =
+  | { kind: "silent"; reason: SilentReason }
+  | { kind: "observe" }
+  | { kind: "ask_checkin"; is_retry: boolean };
+
+export type PolicyView = {
+  silent: boolean;
+  onFireUntil: string | null;
+  cooldownUntil: string | null;
+  shownToday: number;
+  dailyLimit: number;
+  retryPending: boolean;
+  frequencyPromptDue: boolean;
+};
+
+export type PolicyDebug = { view: PolicyView; decision: PolicyDecision };

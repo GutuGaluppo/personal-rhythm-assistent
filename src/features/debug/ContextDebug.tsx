@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { getContextAssessment } from "@/lib/tauri/commands";
-import type { ContextAssessment, Signal, SignalKind } from "@/types";
+import { getContextAssessment, getPolicyDebug } from "@/lib/tauri/commands";
+import type { ContextAssessment, PolicyDebug, PolicyDecision, Signal, SignalKind } from "@/types";
 import styles from "./ContextDebug.module.css";
 
 const SIGNAL_LABEL: Record<SignalKind, string> = {
@@ -37,6 +37,7 @@ export function ContextDebug() {
       {isPending && <p role="status">Loading…</p>}
       {isError && <p role="alert">Couldn't read the assessment.</p>}
       {data && <Assessment assessment={data} />}
+      <PolicySection />
     </div>
   );
 }
@@ -74,5 +75,63 @@ function Assessment({ assessment }: { assessment: ContextAssessment }) {
         </tbody>
       </table>
     </>
+  );
+}
+
+export function describeDecision(d: PolicyDecision): string {
+  switch (d.kind) {
+    case "observe":
+      return "Observe: allowed to speak, but the evidence isn't there.";
+    case "ask_checkin":
+      return d.is_retry ? "Ask a check-in (the single retry)." : "Ask a check-in.";
+    case "silent":
+      switch (d.reason.kind) {
+        case "silent_mode":
+          return "Silent: silence is on.";
+        case "cooldown":
+          return `Silent: cooldown until ${d.reason.until}.`;
+        case "daily_ceiling":
+          return `Silent: daily limit of ${d.reason.limit} reached.`;
+        case "on_fire":
+          return `Silent: "I'm on fire" until ${d.reason.until}.`;
+      }
+  }
+}
+
+function PolicySection() {
+  const { data } = useQuery({
+    queryKey: ["policy-debug"],
+    queryFn: getPolicyDebug,
+    refetchInterval: 10_000,
+  });
+  if (!data) return null;
+  return <Policy debug={data} />;
+}
+
+function Policy({ debug }: { debug: PolicyDebug }) {
+  const { view, decision } = debug;
+  return (
+    <section aria-labelledby="policy-heading">
+      <h2 id="policy-heading">Policy</h2>
+      <p>
+        <strong>{describeDecision(decision)}</strong>
+      </p>
+      <dl className={styles.facts}>
+        <dt>Silence</dt>
+        <dd>{view.silent ? "On" : "Off"}</dd>
+        <dt>I&apos;m on fire until</dt>
+        <dd>{view.onFireUntil ?? "—"}</dd>
+        <dt>Cooldown until</dt>
+        <dd>{view.cooldownUntil ?? "—"}</dd>
+        <dt>Check-ins today</dt>
+        <dd>
+          {view.shownToday} of {view.dailyLimit}
+        </dd>
+        <dt>Retry pending</dt>
+        <dd>{view.retryPending ? "Yes" : "No"}</dd>
+        <dt>Frequency question due</dt>
+        <dd>{view.frequencyPromptDue ? "Yes" : "No"}</dd>
+      </dl>
+    </section>
   );
 }

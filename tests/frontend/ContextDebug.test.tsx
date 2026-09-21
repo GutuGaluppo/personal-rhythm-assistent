@@ -1,8 +1,8 @@
 import { screen, within } from "@testing-library/react";
-import { ContextDebug, formatMeasure } from "@/features/debug/ContextDebug";
+import { ContextDebug, describeDecision, formatMeasure } from "@/features/debug/ContextDebug";
 import * as commands from "@/lib/tauri/commands";
 import { pagesFor } from "@/stores/navigation";
-import type { ContextAssessment } from "@/types";
+import type { ContextAssessment, PolicyDebug } from "@/types";
 import { renderWithProviders } from "./utils";
 
 vi.mock("@/lib/tauri/commands");
@@ -55,6 +55,23 @@ const assessment: ContextAssessment = {
     },
   ],
 };
+
+const policy: PolicyDebug = {
+  view: {
+    silent: false,
+    onFireUntil: null,
+    cooldownUntil: "2026-03-04T11:00:00Z",
+    shownToday: 2,
+    dailyLimit: 4,
+    retryPending: false,
+    frequencyPromptDue: false,
+  },
+  decision: { kind: "silent", reason: { kind: "cooldown", until: "2026-03-04T11:00:00Z" } },
+};
+
+beforeEach(() => {
+  vi.mocked(commands.getPolicyDebug).mockResolvedValue(policy);
+});
 
 describe("ContextDebug", () => {
   it("shows every signal with its status, numbers and evidence", async () => {
@@ -109,5 +126,33 @@ describe("developer pages", () => {
   it("are offered in development only", () => {
     expect(pagesFor(true).map((p) => p.id)).toContain("context-debug");
     expect(pagesFor(false).map((p) => p.id)).not.toContain("context-debug");
+  });
+});
+
+describe("policy section", () => {
+  it("explains the decision and shows the state behind it", async () => {
+    vi.mocked(commands.getContextAssessment).mockResolvedValue(assessment);
+    renderWithProviders(<ContextDebug />);
+    expect(
+      await screen.findByText("Silent: cooldown until 2026-03-04T11:00:00Z."),
+    ).toBeInTheDocument();
+    expect(screen.getByText("2 of 4")).toBeInTheDocument();
+  });
+
+  it.each([
+    [{ kind: "observe" as const }, /Observe/],
+    [{ kind: "ask_checkin" as const, is_retry: false }, /^Ask a check-in\.$/],
+    [{ kind: "ask_checkin" as const, is_retry: true }, /retry/],
+    [{ kind: "silent" as const, reason: { kind: "silent_mode" as const } }, /silence is on/],
+    [
+      { kind: "silent" as const, reason: { kind: "daily_ceiling" as const, limit: 4 } },
+      /limit of 4/,
+    ],
+    [
+      { kind: "silent" as const, reason: { kind: "on_fire" as const, until: "12:00" } },
+      /on fire.* until 12:00/,
+    ],
+  ])("describes %j", (decision, expected) => {
+    expect(describeDecision(decision)).toMatch(expected);
   });
 });
