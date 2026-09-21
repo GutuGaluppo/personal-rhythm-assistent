@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
+import { CategoryBars } from "@/components/rhythm/CategoryBars";
 import { Card } from "@/components/ui/Card";
-import { formatDuration, formatPercent } from "@/lib/utils/format";
+import { formatDuration } from "@/lib/utils/format";
 import type { DailySummary } from "@/types";
 import { useDailySummary, useSaveReflection } from "./useDailySummary";
 import styles from "./DailySummaryView.module.css";
@@ -41,22 +42,7 @@ function Summary({ summary }: { summary: DailySummary }) {
               {summary.categoryDistribution.length === 0 ? (
                 <p className={styles.muted}>No active time.</p>
               ) : (
-                <ul className={styles.distribution}>
-                  {summary.categoryDistribution.map((c) => (
-                    <li key={c.category}>
-                      <div className={styles.row}>
-                        <span>{c.category}</span>
-                        <span>
-                          {formatDuration(c.minutes)} · {formatPercent(c.share)}
-                        </span>
-                      </div>
-                      {/* Decoration only: the numbers beside it carry the meaning. */}
-                      <div className={styles.track} aria-hidden="true">
-                        <div className={styles.bar} style={{ width: formatPercent(c.share) }} />
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                <CategoryBars shares={summary.categoryDistribution} />
               )}
             </Card>
           </div>

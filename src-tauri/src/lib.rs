@@ -156,6 +156,7 @@ pub fn run() {
             app::commands::get_daily_summary,
             app::commands::list_summary_days,
             app::commands::save_reflection,
+            app::commands::get_weekly_review,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Personal Rhythm Assistant");

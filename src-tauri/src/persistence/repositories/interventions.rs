@@ -69,3 +69,37 @@ pub fn reasons_of(conn: &Connection, id: &str) -> Result<Vec<String>> {
     )?;
     Ok(serde_json::from_str(&raw)?)
 }
+
+/// How one shown check-in ended, as recorded.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Outcome {
+    pub id: String,
+    pub shown_at: String,
+    pub is_retry: bool,
+    /// The last recorded action, e.g. "continue", "take_break", "ignored".
+    /// `None` if the check-in has no recorded ending.
+    pub action: Option<String>,
+}
+
+/// Every check-in shown in `[from, to)`, oldest first, with its final action.
+pub fn outcomes_between(conn: &Connection, from: &str, to: &str) -> Result<Vec<Outcome>> {
+    let (from, to) = (time::normalize(from)?, time::normalize(to)?);
+    let mut stmt = conn.prepare(
+        "SELECT i.id, i.shown_at, i.is_retry,
+                (SELECT f.value FROM intervention_feedback f
+                 WHERE f.intervention_id = i.id AND f.kind = 'action'
+                 ORDER BY f.id DESC LIMIT 1)
+         FROM interventions i
+         WHERE i.shown_at >= ?1 AND i.shown_at < ?2
+         ORDER BY i.shown_at, i.id",
+    )?;
+    let rows = stmt.query_map(params![from, to], |r| {
+        Ok(Outcome {
+            id: r.get(0)?,
+            shown_at: r.get(1)?,
+            is_retry: r.get(2)?,
+            action: r.get(3)?,
+        })
+    })?;
+    Ok(rows.collect::<std::result::Result<_, _>>()?)
+}

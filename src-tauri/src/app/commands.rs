@@ -14,6 +14,7 @@ use crate::privacy::retention::{self, RetentionPolicy};
 use crate::privacy::toggles::{self, PrivacyToggles};
 use crate::reports::daily::{self, DailySummary};
 use crate::reports::my_day::{self, MyDay};
+use crate::reports::weekly::{self, WeeklyConfig, WeeklyReview};
 use crate::sensors::service::SharedSnapshot;
 use crate::sensors::system_state::SensorSnapshot;
 use crate::sessions::classification::{AppMapping, Classification};
@@ -339,5 +340,24 @@ pub fn save_reflection(
     db.with_conn(|c| {
         daily::save_reflection(c, date, &text, chrono::Utc::now(), daily::local_offset())
     })
+    .map_err(err)
+}
+
+// ---- Weekly review ----
+
+/// The last seven local days, ending today.
+#[tauri::command]
+pub fn get_weekly_review(
+    db: State<'_, Arc<Database>>,
+    sessions: State<'_, Arc<Mutex<SessionService>>>,
+) -> Result<WeeklyReview, String> {
+    let service = sessions.lock().unwrap();
+    weekly::review(
+        &db,
+        &service,
+        &WeeklyConfig::default(),
+        chrono::Utc::now(),
+        daily::local_offset(),
+    )
     .map_err(err)
 }

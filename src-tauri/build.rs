@@ -36,6 +36,7 @@ const COMMANDS: &[&str] = &[
     "get_daily_summary",
     "list_summary_days",
     "save_reflection",
+    "get_weekly_review",
 ];
 
 fn main() {

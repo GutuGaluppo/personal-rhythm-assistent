@@ -11,6 +11,7 @@ import type {
   PauseKind,
   PauseView,
   PolicyDebug,
+  WeeklyReview,
 } from "@/types";
 
 /** Typed wrappers around the Rust commands. Nothing else calls `invoke` directly. */
@@ -84,3 +85,8 @@ export const listSummaryDays = () => invoke<string[]>("list_summary_days");
 /** The user's own words about a day. Empty text clears it. */
 export const saveReflection = (date: string, text: string) =>
   invoke<void>("save_reflection", { date, text });
+
+// ---- Weekly review ----
+
+/** The last seven local days, ending today. */
+export const getWeeklyReview = () => invoke<WeeklyReview>("get_weekly_review");

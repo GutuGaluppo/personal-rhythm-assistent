@@ -33,3 +33,15 @@ export function formatDate(isoDate: string): string {
     day: "numeric",
   });
 }
+
+/** "Mar 4" from a local YYYY-MM-DD. */
+export function formatShortDate(isoDate: string): string {
+  const [y, m, d] = isoDate.split("-").map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+/** "Wed" from a local YYYY-MM-DD. */
+export function formatWeekday(isoDate: string): string {
+  const [y, m, d] = isoDate.split("-").map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString("en-US", { weekday: "short" });
+}

@@ -146,3 +146,50 @@ export type DailySummary = {
   reflectiveQuestion: string;
   reflection: string | null;
 };
+
+export type WeekDay = {
+  date: string;
+  activeMinutes: number;
+  longestSessionMinutes: number;
+  contextSwitches: number;
+  sessions: number;
+  averageSessionMinutes: number | null;
+};
+
+export type Observation = {
+  /** Stable key for the rule that produced it. */
+  id: string;
+  text: string;
+  /** The stored numbers the text was made from. */
+  evidence: string;
+};
+
+export type WeeklyReview = {
+  from: string;
+  to: string;
+  activeMinutes: number;
+  days: WeekDay[];
+  categoryDistribution: CategoryShare[];
+  sessions: {
+    count: number;
+    averageMinutes: number;
+    longestMinutes: number;
+    longSessionThresholdMinutes: number;
+    longSessions: number;
+    longSessionDays: number;
+  };
+  switching: {
+    total: number;
+    perActiveHour: number;
+    busiestDay: { date: string; perActiveHour: number } | null;
+  };
+  checkIns: {
+    shown: number;
+    accepted: number;
+    declined: number;
+    ignored: number;
+    onFire: number;
+  };
+  observations: Observation[];
+  reflectiveQuestion: string;
+};

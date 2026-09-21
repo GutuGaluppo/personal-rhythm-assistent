@@ -31,6 +31,7 @@
     "allow-get-interest-suggestion",
     "allow-get-daily-summary",
     "allow-list-summary-days",
-    "allow-save-reflection"
+    "allow-save-reflection",
+    "allow-get-weekly-review"
   ]
 }

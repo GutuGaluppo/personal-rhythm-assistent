@@ -2,3 +2,4 @@
 
 pub mod daily;
 pub mod my_day;
+pub mod weekly;
