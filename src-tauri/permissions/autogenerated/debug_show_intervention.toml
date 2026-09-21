@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-debug-show-intervention"
+description = "Enables the debug_show_intervention command without any pre-configured scope."
+commands.allow = ["debug_show_intervention"]
+
+[[permission]]
+identifier = "deny-debug-show-intervention"
+description = "Denies the debug_show_intervention command without any pre-configured scope."
+commands.deny = ["debug_show_intervention"]

@@ -1,7 +1,26 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Main window capabilities. The intervention window gets its own, smaller capability (Milestone 7).",
+  "description": "Main window: everything the app screens need, but not the check-in window's own commands.",
   "windows": ["main"],
-  "permissions": ["core:default"]
+  "permissions": [
+    "core:default",
+    "allow-delete-all-local-data",
+    "allow-get-retention-policy",
+    "allow-set-retention-policy",
+    "allow-get-privacy-toggles",
+    "allow-set-privacy-toggles",
+    "allow-get-sensor-state",
+    "allow-get-current-session",
+    "allow-get-my-day",
+    "allow-list-app-mappings",
+    "allow-set-app-category",
+    "allow-reset-app-category",
+    "allow-get-context-assessment",
+    "allow-get-policy-view",
+    "allow-set-silence",
+    "allow-set-on-fire",
+    "allow-get-policy-debug",
+    "allow-debug-show-intervention"
+  ]
 }

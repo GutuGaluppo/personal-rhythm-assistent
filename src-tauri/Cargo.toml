@@ -60,3 +60,11 @@ path = "../tests/core/context.rs"
 [[test]]
 name = "policy"
 path = "../tests/core/policy.rs"
+
+[[test]]
+name = "interventions"
+path = "../tests/core/interventions.rs"
+
+[[test]]
+name = "capabilities"
+path = "../tests/core/capabilities.rs"

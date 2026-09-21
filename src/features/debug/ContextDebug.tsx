@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getContextAssessment, getPolicyDebug } from "@/lib/tauri/commands";
+import { debugShowIntervention, getContextAssessment, getPolicyDebug } from "@/lib/tauri/commands";
 import type { ContextAssessment, PolicyDebug, PolicyDecision, Signal, SignalKind } from "@/types";
 import styles from "./ContextDebug.module.css";
 
@@ -38,6 +38,15 @@ export function ContextDebug() {
       {isError && <p role="alert">Couldn't read the assessment.</p>}
       {data && <Assessment assessment={data} />}
       <PolicySection />
+      <section aria-labelledby="preview-heading">
+        <h2 id="preview-heading">Check-in window</h2>
+        <p className={styles.muted}>
+          Opens the check-in as it would appear. It skips the policy and records nothing.
+        </p>
+        <button type="button" onClick={() => void debugShowIntervention()}>
+          Show a check-in preview
+        </button>
+      </section>
     </div>
   );
 }

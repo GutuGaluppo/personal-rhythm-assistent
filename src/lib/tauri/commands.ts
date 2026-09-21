@@ -1,5 +1,13 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { AppMapping, Category, ContextAssessment, MyDay, PolicyDebug } from "@/types";
+import type {
+  AppMapping,
+  Category,
+  ContextAssessment,
+  InterventionAnswer,
+  InterventionView,
+  MyDay,
+  PolicyDebug,
+} from "@/types";
 
 /** Typed wrappers around the Rust commands. Nothing else calls `invoke` directly. */
 
@@ -16,3 +24,16 @@ export const resetAppCategory = (bundleId: string) =>
 export const getContextAssessment = () => invoke<ContextAssessment>("get_context_assessment");
 
 export const getPolicyDebug = () => invoke<PolicyDebug>("get_policy_debug");
+
+// The check-in window may call only these three (see capabilities/intervention.json).
+export const getCurrentIntervention = () =>
+  invoke<InterventionView | null>("get_current_intervention");
+
+/** Resolves to the next screen, or null once the check-in is over. */
+export const answerIntervention = (id: string, answer: InterventionAnswer) =>
+  invoke<InterventionView | null>("answer_intervention", { id, answer });
+
+export const dismissIntervention = (id: string) => invoke<void>("dismiss_intervention", { id });
+
+/** Developer preview; records nothing. */
+export const debugShowIntervention = () => invoke<void>("debug_show_intervention");

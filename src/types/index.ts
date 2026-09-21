@@ -89,3 +89,22 @@ export type PolicyView = {
 };
 
 export type PolicyDebug = { view: PolicyView; decision: PolicyDecision };
+
+export type InterventionStep = "energy" | "positive" | "low";
+
+export type InterventionView = {
+  id: string;
+  headline: string;
+  question: string;
+  /** Why this is being shown, as plain statements of the measurements. */
+  reasons: string[];
+  step: InterventionStep;
+};
+
+export type InterventionAnswer =
+  | { kind: "energy"; value: "good" | "okay" | "low" }
+  | {
+      kind: "action";
+      value: "continue" | "take_break" | "move" | "meditate" | "do_nothing" | "on_fire";
+    }
+  | { kind: "leave_me_alone" };

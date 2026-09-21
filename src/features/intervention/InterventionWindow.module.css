@@ -1,0 +1,100 @@
+.card {
+  --enter-offset: 8px;
+  position: relative;
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding: var(--space-4) var(--space-3) var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  animation: enter var(--motion-overlay) ease-out;
+}
+/* Reduce Motion: the overlay only fades in; nothing moves. */
+:global(:root[data-reduce-motion="true"]) .card {
+  --enter-offset: 0px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    --enter-offset: 0px;
+  }
+}
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(var(--enter-offset));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.dismiss {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.headline {
+  margin: 0;
+  font-weight: 600;
+  padding-right: var(--space-4);
+}
+.question {
+  margin: 0;
+}
+.choices {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+.choice {
+  flex: 1;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  cursor: pointer;
+}
+.choice:hover {
+  border-color: var(--color-accent);
+}
+.secondary {
+  display: flex;
+  gap: var(--space-3);
+}
+.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: 0.85rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.why {
+  margin-top: auto;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+.whyTitle {
+  margin: 0 0 var(--space-1);
+  font-weight: 600;
+}
+.why ul {
+  margin: 0;
+  padding-left: var(--space-3);
+}

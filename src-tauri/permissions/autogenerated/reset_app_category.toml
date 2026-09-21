@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-reset-app-category"
+description = "Enables the reset_app_category command without any pre-configured scope."
+commands.allow = ["reset_app_category"]
+
+[[permission]]
+identifier = "deny-reset-app-category"
+description = "Denies the reset_app_category command without any pre-configured scope."
+commands.deny = ["reset_app_category"]

@@ -1,6 +1,8 @@
 use crate::context;
 use crate::context::engine::ContextConfig;
 use crate::context::signals::ContextAssessment;
+use crate::interventions::manager::InterventionManager;
+use crate::interventions::model::{Answer, InterventionView};
 use crate::persistence::repositories::activity_events;
 use crate::persistence::Database;
 use crate::policy::rules::PolicyDecision;
@@ -179,4 +181,49 @@ pub fn get_policy_debug(
             .decide(now, day_start, assessment.active_signal_count)
             .map_err(err)?,
     })
+}
+
+// ---- Check-in window. These three are the ONLY commands its capability allows. ----
+
+#[tauri::command]
+pub fn get_current_intervention(
+    manager: State<'_, Arc<InterventionManager>>,
+) -> Option<InterventionView> {
+    manager.current()
+}
+
+/// The next screen, or `None` once the check-in is over.
+#[tauri::command]
+pub fn answer_intervention(
+    manager: State<'_, Arc<InterventionManager>>,
+    id: String,
+    answer: Answer,
+) -> Result<Option<InterventionView>, String> {
+    manager.answer(chrono::Utc::now(), &id, answer).map_err(err)
+}
+
+#[tauri::command]
+pub fn dismiss_intervention(
+    manager: State<'_, Arc<InterventionManager>>,
+    id: String,
+) -> Result<(), String> {
+    manager.dismiss(chrono::Utc::now(), &id).map_err(err)
+}
+
+/// Developer preview of the check-in: skips the policy and records nothing.
+#[tauri::command]
+pub fn debug_show_intervention(
+    db: State<'_, Arc<Database>>,
+    sessions: State<'_, Arc<Mutex<SessionService>>>,
+    manager: State<'_, Arc<InterventionManager>>,
+) -> Result<(), String> {
+    if !cfg!(debug_assertions) {
+        return Err("only available in development builds".into());
+    }
+    let now = chrono::Utc::now();
+    let assessment = {
+        let service = sessions.lock().unwrap();
+        context::service::assess_now(&db, &service, &ContextConfig::default(), now).map_err(err)?
+    };
+    manager.preview(now, &assessment).map(|_| ()).map_err(err)
 }

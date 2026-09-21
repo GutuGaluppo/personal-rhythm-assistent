@@ -1,7 +1,7 @@
 //! Retention configuration model (IMPLEMENTATION.md §21).
 
 use crate::persistence::error::{PersistenceError, Result};
-use crate::persistence::repositories::{activity_events, sessions, settings};
+use crate::persistence::repositories::{activity_events, interventions, sessions, settings};
 use crate::persistence::time;
 use chrono::{DateTime, Duration, Utc};
 use rusqlite::Connection;
@@ -47,6 +47,7 @@ impl RetentionPolicy {
 pub struct RetentionReport {
     pub activity_events_deleted: usize,
     pub sessions_deleted: usize,
+    pub interventions_deleted: usize,
 }
 
 pub fn load(conn: &Connection) -> Result<RetentionPolicy> {
@@ -67,5 +68,7 @@ pub fn apply(conn: &Connection, now: DateTime<Utc>) -> Result<RetentionReport> {
     Ok(RetentionReport {
         activity_events_deleted: activity_events::delete_before(conn, &events_cutoff)?,
         sessions_deleted: sessions::delete_started_before(conn, &sessions_cutoff)?,
+        // Kept as long as sessions, so summaries can still count accepted/declined check-ins.
+        interventions_deleted: interventions::delete_before(conn, &sessions_cutoff)?,
     })
 }
