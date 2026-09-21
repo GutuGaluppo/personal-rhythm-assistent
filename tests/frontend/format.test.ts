@@ -1,4 +1,4 @@
-import { formatAgo, formatDuration } from "@/lib/utils/format";
+import { formatAgo, formatDuration, formatRemaining } from "@/lib/utils/format";
 
 describe("formatDuration", () => {
   it.each([
@@ -22,5 +22,19 @@ describe("formatAgo", () => {
   it("appends 'ago'", () => {
     expect(formatAgo(42)).toBe("42m ago");
     expect(formatAgo(65)).toBe("1h 5m ago");
+  });
+});
+
+describe("formatRemaining", () => {
+  it.each([
+    [5 * 60_000, "About 5 min left"],
+    [4 * 60_000 + 1, "About 5 min left"],
+    [61_000, "About 2 min left"],
+    [60_000, "Less than a minute left"],
+    [1_000, "Less than a minute left"],
+    [0, "Time's up"],
+    [-5_000, "Time's up"],
+  ])("%s ms -> %s", (ms, expected) => {
+    expect(formatRemaining(ms)).toBe(expected);
   });
 });

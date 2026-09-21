@@ -108,3 +108,14 @@ export type InterventionAnswer =
       value: "continue" | "take_break" | "move" | "meditate" | "do_nothing" | "on_fire";
     }
   | { kind: "leave_me_alone" };
+
+export type PauseKind = "silence" | "meditation" | "walking" | "stretching";
+export type PausePhase = "setup" | "running" | "done";
+
+export type PauseView = {
+  phase: PausePhase;
+  kind: PauseKind;
+  startedAt: string | null;
+  endsAt: string | null;
+  durationSeconds: number | null;
+};

@@ -23,6 +23,10 @@ const COMMANDS: &[&str] = &[
     "answer_intervention",
     "dismiss_intervention",
     "debug_show_intervention",
+    "get_pause_view",
+    "start_pause",
+    "end_pause",
+    "open_pause",
 ];
 
 fn main() {

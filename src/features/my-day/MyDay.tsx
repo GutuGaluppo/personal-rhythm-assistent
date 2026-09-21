@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/Card";
+import { openPause } from "@/lib/tauri/commands";
 import { formatAgo, formatDuration } from "@/lib/utils/format";
 import type { ActivityState, MyDay as MyDayData } from "@/types";
 import { useMyDay } from "./useMyDay";
@@ -15,7 +16,12 @@ export function MyDay() {
 
   return (
     <div className={styles.page}>
-      <h1 className={styles.heading}>My Day</h1>
+      <div className={styles.header}>
+        <h1 className={styles.heading}>My Day</h1>
+        <button type="button" onClick={() => void openPause()}>
+          Take a break
+        </button>
+      </div>
       {isPending && <p role="status">Loading…</p>}
       {isError && <p role="alert">Couldn't read your day from this device.</p>}
       {data && <Content day={data} />}

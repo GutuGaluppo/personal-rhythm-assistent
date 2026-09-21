@@ -81,3 +81,71 @@ fn build(app: &AppHandle) -> tauri::Result<()> {
     });
     Ok(())
 }
+
+// ---- Pause window ------------------------------------------------------------------
+
+use super::pause::{PausePresenter, PauseService};
+
+pub const PAUSE_WINDOW_LABEL: &str = "pause";
+
+pub struct TauriPausePresenter {
+    app: AppHandle,
+}
+
+impl TauriPausePresenter {
+    pub fn new(app: AppHandle) -> Self {
+        Self { app }
+    }
+}
+
+impl PausePresenter for TauriPausePresenter {
+    fn show(&self) {
+        let app = self.app.clone();
+        let _ = self.app.run_on_main_thread(move || {
+            // Reopening while it is already up just brings it forward.
+            if let Some(window) = app.get_webview_window(PAUSE_WINDOW_LABEL) {
+                let _ = window.show();
+                let _ = window.set_focus();
+                return;
+            }
+            if let Err(e) = build_pause(&app) {
+                eprintln!("could not open the pause window: {e}");
+            }
+        });
+    }
+
+    fn close(&self) {
+        let app = self.app.clone();
+        let _ = self.app.run_on_main_thread(move || {
+            if let Some(window) = app.get_webview_window(PAUSE_WINDOW_LABEL) {
+                let _ = window.destroy();
+            }
+        });
+    }
+}
+
+fn build_pause(app: &AppHandle) -> tauri::Result<()> {
+    let handle = app.clone();
+    let window = WebviewWindowBuilder::new(
+        app,
+        PAUSE_WINDOW_LABEL,
+        WebviewUrl::App("index.html?view=pause".into()),
+    )
+    .title("Pause")
+    .inner_size(460.0, 540.0)
+    .resizable(false)
+    .center()
+    // The user asked for this one, so it may take focus.
+    .focused(true)
+    .build()?;
+
+    // Closed from outside (the red button): the user has left the pause.
+    window.on_window_event(move |event| {
+        if matches!(event, WindowEvent::Destroyed) {
+            if let Some(pause) = handle.try_state::<Arc<PauseService>>() {
+                pause.window_closed();
+            }
+        }
+    });
+    Ok(())
+}

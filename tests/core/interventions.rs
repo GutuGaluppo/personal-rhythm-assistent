@@ -10,6 +10,9 @@ use personal_rhythm_assistant_lib::interventions::manager::{
 use personal_rhythm_assistant_lib::interventions::model::{
     Action, Answer, Energy, InterventionView, Step,
 };
+use personal_rhythm_assistant_lib::interventions::pause::{
+    PauseKind, PausePresenter, PauseService,
+};
 use personal_rhythm_assistant_lib::persistence::repositories::{interventions, settings};
 use personal_rhythm_assistant_lib::persistence::Database;
 use personal_rhythm_assistant_lib::policy::engine::PolicyState;
@@ -42,8 +45,25 @@ impl Presenter for FakePresenter {
     }
 }
 
+#[derive(Default)]
+struct PauseLog {
+    shown: usize,
+    closed: usize,
+}
+struct FakePausePresenter(Arc<Mutex<PauseLog>>);
+impl PausePresenter for FakePausePresenter {
+    fn show(&self) {
+        self.0.lock().unwrap().shown += 1;
+    }
+    fn close(&self) {
+        self.0.lock().unwrap().closed += 1;
+    }
+}
+
 struct Rig {
     manager: InterventionManager,
+    pause: Arc<PauseService>,
+    pause_log: Arc<Mutex<PauseLog>>,
     policy: Arc<PolicyService>,
     db: Arc<Database>,
     log: Arc<Mutex<Log>>,
@@ -52,14 +72,22 @@ fn rig() -> Rig {
     let db = Arc::new(Database::open_in_memory().unwrap());
     let policy = Arc::new(PolicyService::new(db.clone(), PolicyConfig::default()));
     let log = Arc::new(Mutex::new(Log::default()));
+    let pause_log = Arc::new(Mutex::new(PauseLog::default()));
+    let pause = Arc::new(PauseService::new(
+        policy.clone(),
+        Box::new(FakePausePresenter(pause_log.clone())),
+    ));
     let manager = InterventionManager::new(
         db.clone(),
         policy.clone(),
         Box::new(FakePresenter(log.clone())),
+        pause.clone(),
         InterventionConfig::default(),
     );
     Rig {
         manager,
+        pause,
+        pause_log,
         policy,
         db,
         log,
@@ -267,11 +295,12 @@ fn taking_a_break_is_an_accepted_break() {
 }
 
 #[test]
-fn low_offers_move_meditate_or_do_nothing() {
+fn low_offers_move_meditate_or_do_nothing_and_none_is_a_refusal() {
+    // "Do nothing" is a silent pause (Pause Mode's "nothing"), not a refusal.
     for (a, refusal) in [
         (Action::Move, 0),
         (Action::Meditate, 0),
-        (Action::DoNothing, 1),
+        (Action::DoNothing, 0),
     ] {
         let r = rig();
         let v = show(&r, t(10, 0));
@@ -530,6 +559,15 @@ fn wording_rotation_survives_a_restart() {
             db,
             policy,
             Box::new(FakePresenter(Arc::new(Mutex::new(Log::default())))),
+            Arc::new(PauseService::new(
+                Arc::new(PolicyService::new(
+                    Arc::new(Database::open_in_memory().unwrap()),
+                    PolicyConfig::default(),
+                )),
+                Box::new(FakePausePresenter(Arc::new(
+                    Mutex::new(PauseLog::default()),
+                ))),
+            )),
             InterventionConfig::default(),
         );
         headlines.push(
@@ -634,4 +672,71 @@ fn deleting_all_local_data_removes_check_ins_too() {
     r.db.delete_all_local_data().unwrap();
     assert_eq!(r.db.with_conn(interventions::count).unwrap(), 0);
     assert!(feedback(&r, &v.id).is_empty());
+}
+
+// ---- Pause Mode hand-off ------------------------------------------------------------
+
+fn finish_with(r: &Rig, first: Option<Energy>, last: Action) {
+    let v = show(r, t(10, 0));
+    if let Some(e) = first {
+        r.manager.answer(t(10, 0), &v.id, energy(e)).unwrap();
+    }
+    r.manager.answer(t(10, 1), &v.id, action(last)).unwrap();
+}
+
+#[test]
+fn accepted_actions_open_the_pause_window_with_a_matching_suggestion() {
+    for (first, last, expected) in [
+        (Energy::Good, Action::TakeBreak, PauseKind::Silence),
+        (Energy::Low, Action::Meditate, PauseKind::Meditation),
+        (Energy::Low, Action::Move, PauseKind::Walking),
+        (Energy::Low, Action::DoNothing, PauseKind::Silence),
+    ] {
+        let r = rig();
+        finish_with(&r, Some(first), last);
+        assert_eq!(r.pause_log.lock().unwrap().shown, 1, "{last:?}");
+        assert_eq!(r.pause.view(t(10, 1)).unwrap().kind, expected, "{last:?}");
+    }
+}
+
+#[test]
+fn continuing_or_leaving_me_alone_never_opens_a_pause() {
+    let r = rig();
+    finish_with(&r, Some(Energy::Good), Action::Continue);
+    assert_eq!(r.pause_log.lock().unwrap().shown, 0);
+
+    let r = rig();
+    let v = show(&r, t(10, 0));
+    r.manager
+        .answer(t(10, 0), &v.id, Answer::LeaveMeAlone)
+        .unwrap();
+    assert_eq!(r.pause_log.lock().unwrap().shown, 0);
+}
+
+#[test]
+fn on_fire_does_not_open_a_pause() {
+    let r = rig();
+    finish_with(&r, Some(Energy::Good), Action::OnFire);
+    assert_eq!(r.pause_log.lock().unwrap().shown, 0);
+}
+
+#[test]
+fn nothing_interrupts_a_pause_in_progress() {
+    let r = rig();
+    r.pause.start(PauseKind::Meditation, 5, t(10, 0)).unwrap();
+    // Even long after the policy cooldown a check-in must wait for the pause to end.
+    let later = t(12, 0);
+    assert!(r
+        .manager
+        .consider(later, day_start(), &candidate(later), true)
+        .unwrap()
+        .is_none());
+
+    r.pause.end();
+    // (the accepted break started a 60 minute cooldown at 10:00; by 12:00 it is over)
+    assert!(r
+        .manager
+        .consider(later, day_start(), &candidate(later), true)
+        .unwrap()
+        .is_some());
 }

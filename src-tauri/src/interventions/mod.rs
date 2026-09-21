@@ -2,10 +2,12 @@
 //!
 //! - `model`     — steps and answers; the window's whole vocabulary
 //! - `manager`   — the flow: when to show, what each answer does, timeouts
+//! - `pause`     — Pause Mode: a deadline-based timer that outlives any window
 //! - `scheduler` — the one background loop (timeouts every second, evaluation every minute)
 //! - `window`    — the dedicated Tauri window (a `Presenter`)
 
 pub mod manager;
 pub mod model;
+pub mod pause;
 pub mod scheduler;
 pub mod window;

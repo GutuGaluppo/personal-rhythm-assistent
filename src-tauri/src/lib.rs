@@ -10,7 +10,8 @@ pub mod sensors;
 pub mod sessions;
 
 use interventions::manager::{InterventionConfig, InterventionManager};
-use interventions::window::TauriPresenter;
+use interventions::pause::PauseService;
+use interventions::window::{TauriPausePresenter, TauriPresenter};
 use persistence::Database;
 use policy::rules::PolicyConfig;
 use policy::service::PolicyService;
@@ -85,10 +86,17 @@ pub fn run() {
             app.manage(bus);
             app.manage(snapshot);
 
+            let pause = Arc::new(PauseService::new(
+                policy.clone(),
+                Box::new(TauriPausePresenter::new(app.handle().clone())),
+            ));
+            app.manage(pause.clone());
+
             let manager = Arc::new(InterventionManager::new(
                 db_for_manager,
                 policy.clone(),
                 Box::new(TauriPresenter::new(app.handle().clone())),
+                pause.clone(),
                 InterventionConfig::default(),
             ));
             app.manage(manager.clone());
@@ -99,7 +107,7 @@ pub fn run() {
                 snapshot_for_scheduler,
             );
 
-            app::tray::install(app.handle(), policy.clone())?;
+            app::tray::install(app.handle(), policy.clone(), pause)?;
             app.manage(policy);
             Ok(())
         })
@@ -124,6 +132,10 @@ pub fn run() {
             app::commands::answer_intervention,
             app::commands::dismiss_intervention,
             app::commands::debug_show_intervention,
+            app::commands::get_pause_view,
+            app::commands::start_pause,
+            app::commands::end_pause,
+            app::commands::open_pause,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Personal Rhythm Assistant");

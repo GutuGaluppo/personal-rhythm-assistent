@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-start-pause"
+description = "Enables the start_pause command without any pre-configured scope."
+commands.allow = ["start_pause"]
+
+[[permission]]
+identifier = "deny-start-pause"
+description = "Denies the start_pause command without any pre-configured scope."
+commands.deny = ["start_pause"]

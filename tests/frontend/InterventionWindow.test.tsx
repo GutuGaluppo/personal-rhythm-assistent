@@ -1,6 +1,6 @@
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { isInterventionWindow } from "@/app/root";
+import { isInterventionWindow, windowKind } from "@/app/root";
 import { InterventionWindow } from "@/features/intervention/InterventionWindow";
 import * as commands from "@/lib/tauri/commands";
 import type { InterventionView } from "@/types";
@@ -211,6 +211,13 @@ describe("tone", () => {
 });
 
 describe("window selection", () => {
+  it("recognises the pause window by its URL", () => {
+    expect(windowKind("?view=pause")).toBe("pause");
+    expect(windowKind("?view=intervention")).toBe("intervention");
+    expect(windowKind("")).toBe("main");
+    expect(windowKind("?view=surprise")).toBe("main");
+  });
+
   it("recognises the check-in window by its URL", () => {
     expect(isInterventionWindow("?view=intervention")).toBe(true);
     expect(isInterventionWindow("")).toBe(false);

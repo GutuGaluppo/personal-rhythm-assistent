@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { App } from "@/app/App";
 import * as commands from "@/lib/tauri/commands";
@@ -41,7 +41,8 @@ describe("App", () => {
 
   it("only offers pages that exist (plus the developer view in development)", () => {
     renderWithProviders(<App />);
-    const labels = screen.getAllByRole("button").map((b) => b.textContent);
+    const nav = within(screen.getByRole("navigation", { name: "Main" }));
+    const labels = nav.getAllByRole("button").map((b) => b.textContent);
     expect(labels).toEqual(["My Day", "Settings", "Context (developer)"]);
   });
 });

@@ -1,11 +1,26 @@
 import { InterventionWindow } from "@/features/intervention/InterventionWindow";
+import { PauseWindow } from "@/features/pause/PauseWindow";
 import { App } from "./App";
 
-/** One bundle serves both windows; the check-in window is opened with `?view=intervention`. */
+export type WindowKind = "main" | "intervention" | "pause";
+
+/** One bundle serves every window; the small ones are opened with `?view=...`. */
+export function windowKind(search: string): WindowKind {
+  const view = new URLSearchParams(search).get("view");
+  return view === "intervention" || view === "pause" ? view : "main";
+}
+
 export function isInterventionWindow(search: string): boolean {
-  return new URLSearchParams(search).get("view") === "intervention";
+  return windowKind(search) === "intervention";
 }
 
 export function Root() {
-  return isInterventionWindow(window.location.search) ? <InterventionWindow /> : <App />;
+  switch (windowKind(window.location.search)) {
+    case "intervention":
+      return <InterventionWindow />;
+    case "pause":
+      return <PauseWindow />;
+    default:
+      return <App />;
+  }
 }

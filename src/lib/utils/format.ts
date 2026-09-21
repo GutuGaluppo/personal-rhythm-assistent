@@ -11,3 +11,11 @@ export function formatDuration(minutes: number): string {
 export function formatAgo(minutes: number): string {
   return Math.round(minutes) < 1 ? "just now" : `${formatDuration(minutes)} ago`;
 }
+
+/** Calm, coarse remaining time for a pause: no ticking seconds. */
+export function formatRemaining(ms: number): string {
+  if (ms <= 0) return "Time's up";
+  if (ms <= 60_000) return "Less than a minute left";
+  const minutes = Math.ceil(ms / 60_000);
+  return `About ${minutes} min left`;
+}

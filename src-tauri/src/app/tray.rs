@@ -1,31 +1,107 @@
 //! Menu bar / tray (IMPLEMENTATION.md §16). Commands are added by the milestones
-//! that own them; this one owns "I'm on fire" and "Silence".
+//! that own them; this one owns "Take a break", "I'm on fire" and "Silence".
 
-use crate::policy::service::PolicyService;
+use crate::interventions::pause::{PauseKind, PauseService};
+use crate::policy::service::{PolicyService, PolicyView};
 use crate::reports::my_day::local_day_start;
-use chrono::Utc;
+use chrono::{DateTime, Utc};
 use std::sync::Arc;
 use std::time::Duration;
+use tauri::image::Image;
 use tauri::menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::TrayIconBuilder;
 use tauri::{AppHandle, Manager};
 
+pub const MENU_BREAK: &str = "take_a_break";
 pub const MENU_ON_FIRE: &str = "on_fire";
 pub const MENU_OPEN: &str = "open";
 pub const MENU_SILENCE: &str = "silence";
 pub const MENU_QUIT: &str = "quit";
+const TRAY_ID: &str = "main";
 
-/// "I'm on fire" ends by itself; keep its check mark honest.
-const SYNC_INTERVAL: Duration = Duration::from_secs(30);
+/// Icons and check marks are re-synced this often (on-fire and pauses end by themselves).
+const SYNC_INTERVAL: Duration = Duration::from_secs(5);
 
-pub fn install(app: &AppHandle, policy: Arc<PolicyService>) -> tauri::Result<()> {
-    let state = policy.view(Utc::now(), local_day_start(Utc::now())).ok();
+/// Which icon the menu bar shows. One at a time, in this order of precedence.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TrayState {
+    Paused,
+    /// The approved warm state. Never animated.
+    OnFire,
+    Silent,
+    Normal,
+}
+
+pub fn tray_state(view: &PolicyView, pause_active: bool) -> TrayState {
+    if pause_active {
+        TrayState::Paused
+    } else if view.on_fire_until.is_some() {
+        TrayState::OnFire
+    } else if view.silent {
+        TrayState::Silent
+    } else {
+        TrayState::Normal
+    }
+}
+
+/// The state in words: an icon's meaning is never carried by its look alone.
+pub fn tooltip(state: TrayState, on_fire_until: Option<DateTime<Utc>>) -> String {
+    const NAME: &str = "Personal Rhythm Assistant";
+    match state {
+        TrayState::Paused => format!("{NAME} · In a pause"),
+        TrayState::OnFire => match on_fire_until {
+            Some(until) => format!("{NAME} · I'm on fire until {}", until.format("%H:%M UTC")),
+            None => format!("{NAME} · I'm on fire"),
+        },
+        TrayState::Silent => format!("{NAME} · Silent"),
+        TrayState::Normal => NAME.to_string(),
+    }
+}
+
+fn icon(state: TrayState) -> Image<'static> {
+    let bytes: &[u8] = match state {
+        TrayState::Paused => include_bytes!("../../icons/tray/pause.png"),
+        TrayState::OnFire => include_bytes!("../../icons/tray/on_fire.png"),
+        TrayState::Silent => include_bytes!("../../icons/tray/silent.png"),
+        TrayState::Normal => include_bytes!("../../icons/tray/default.png"),
+    };
+    Image::from_bytes(bytes).expect("bundled tray icons are valid PNGs")
+}
+
+struct Items {
+    on_fire: CheckMenuItem<tauri::Wry>,
+    silence: CheckMenuItem<tauri::Wry>,
+}
+
+/// Brings icon, tooltip and check marks in line with the actual state.
+fn sync(app: &AppHandle, policy: &PolicyService, pause: &PauseService, items: &Items) {
+    let now = Utc::now();
+    let Ok(view) = policy.view(now, local_day_start(now)) else {
+        return;
+    };
+    let _ = items.on_fire.set_checked(view.on_fire_until.is_some());
+    let _ = items.silence.set_checked(view.silent);
+
+    let state = tray_state(&view, pause.is_active());
+    if let Some(tray) = app.tray_by_id(TRAY_ID) {
+        let _ = tray.set_icon(Some(icon(state)));
+        let _ = tray.set_tooltip(Some(tooltip(state, view.on_fire_until)));
+    }
+}
+
+pub fn install(
+    app: &AppHandle,
+    policy: Arc<PolicyService>,
+    pause: Arc<PauseService>,
+) -> tauri::Result<()> {
+    let view = policy.view(Utc::now(), local_day_start(Utc::now())).ok();
+    let take_break = MenuItem::with_id(app, MENU_BREAK, "Take a break", true, None::<&str>)?;
     let on_fire = CheckMenuItem::with_id(
         app,
         MENU_ON_FIRE,
         "I'm on fire",
         true,
-        state.as_ref().is_some_and(|s| s.on_fire_until.is_some()),
+        view.as_ref().is_some_and(|v| v.on_fire_until.is_some()),
         None::<&str>,
     )?;
     let open = MenuItem::with_id(app, MENU_OPEN, "Open app", true, None::<&str>)?;
@@ -34,13 +110,14 @@ pub fn install(app: &AppHandle, policy: Arc<PolicyService>) -> tauri::Result<()>
         MENU_SILENCE,
         "Silence",
         true,
-        state.as_ref().is_some_and(|s| s.silent),
+        view.as_ref().is_some_and(|v| v.silent),
         None::<&str>,
     )?;
     let quit = MenuItem::with_id(app, MENU_QUIT, "Quit", true, None::<&str>)?;
     let menu = Menu::with_items(
         app,
         &[
+            &take_break,
             &on_fire,
             &open,
             &silence,
@@ -49,26 +126,26 @@ pub fn install(app: &AppHandle, policy: Arc<PolicyService>) -> tauri::Result<()>
         ],
     )?;
 
-    let handler_policy = policy.clone();
-    let (fire_item, silence_item) = (on_fire.clone(), silence.clone());
-    let mut builder = TrayIconBuilder::with_id("main")
-        .tooltip("Personal Rhythm Assistant")
+    let items = Arc::new(Items { on_fire, silence });
+
+    let (h_policy, h_pause, h_items) = (policy.clone(), pause.clone(), items.clone());
+    let builder = TrayIconBuilder::with_id(TRAY_ID)
+        .tooltip(tooltip(TrayState::Normal, None))
+        .icon(icon(TrayState::Normal))
         .menu(&menu)
         .on_menu_event(move |app, event| {
             let now = Utc::now();
             match event.id.as_ref() {
+                MENU_BREAK => h_pause.offer(PauseKind::Silence),
                 MENU_ON_FIRE => {
-                    let view = handler_policy.view(now, local_day_start(now));
-                    let turn_on = !view.is_ok_and(|v| v.on_fire_until.is_some());
-                    if handler_policy.set_on_fire(turn_on, now).is_ok() {
-                        let _ = fire_item.set_checked(turn_on);
-                    }
+                    let on = !h_policy
+                        .view(now, local_day_start(now))
+                        .is_ok_and(|v| v.on_fire_until.is_some());
+                    let _ = h_policy.set_on_fire(on, now);
                 }
                 MENU_SILENCE => {
-                    let turn_on = !handler_policy.state().is_ok_and(|s| s.silent);
-                    if handler_policy.set_silent(turn_on).is_ok() {
-                        let _ = silence_item.set_checked(turn_on);
-                    }
+                    let on = !h_policy.state().is_ok_and(|s| s.silent);
+                    let _ = h_policy.set_silent(on);
                 }
                 MENU_OPEN => {
                     if let Some(window) = app.get_webview_window("main") {
@@ -79,21 +156,16 @@ pub fn install(app: &AppHandle, policy: Arc<PolicyService>) -> tauri::Result<()>
                 MENU_QUIT => app.exit(0),
                 _ => {}
             }
+            sync(app, &h_policy, &h_pause, &h_items);
         });
-    if let Some(icon) = app.default_window_icon() {
-        builder = builder.icon(icon.clone());
-    }
     builder.build(app)?;
 
+    let handle = app.clone();
     std::thread::Builder::new()
         .name("tray-sync".into())
         .spawn(move || loop {
+            sync(&handle, &policy, &pause, &items);
             std::thread::sleep(SYNC_INTERVAL);
-            let now = Utc::now();
-            if let Ok(view) = policy.view(now, local_day_start(now)) {
-                let _ = on_fire.set_checked(view.on_fire_until.is_some());
-                let _ = silence.set_checked(view.silent);
-            }
         })
         .expect("spawn tray sync thread");
     Ok(())

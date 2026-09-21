@@ -3,6 +3,7 @@ use crate::context::engine::ContextConfig;
 use crate::context::signals::ContextAssessment;
 use crate::interventions::manager::InterventionManager;
 use crate::interventions::model::{Answer, InterventionView};
+use crate::interventions::pause::{PauseKind, PauseService, PauseView};
 use crate::persistence::repositories::activity_events;
 use crate::persistence::Database;
 use crate::policy::rules::PolicyDecision;
@@ -226,4 +227,33 @@ pub fn debug_show_intervention(
         context::service::assess_now(&db, &service, &ContextConfig::default(), now).map_err(err)?
     };
     manager.preview(now, &assessment).map(|_| ()).map_err(err)
+}
+
+// ---- Pause window. These three are the ONLY commands its capability allows. ----
+
+#[tauri::command]
+pub fn get_pause_view(pause: State<'_, Arc<PauseService>>) -> Option<PauseView> {
+    pause.view(chrono::Utc::now())
+}
+
+/// `minutes` must be 1-60; the presets are 3, 5 and 10.
+#[tauri::command]
+pub fn start_pause(
+    pause: State<'_, Arc<PauseService>>,
+    kind: PauseKind,
+    minutes: u32,
+) -> Result<PauseView, String> {
+    pause.start(kind, minutes, chrono::Utc::now()).map_err(err)
+}
+
+/// Coming back, or ending early: clears the pause and closes the window.
+#[tauri::command]
+pub fn end_pause(pause: State<'_, Arc<PauseService>>) {
+    pause.end();
+}
+
+/// From the main window ("Take a break"): opens the pause window on its setup screen.
+#[tauri::command]
+pub fn open_pause(pause: State<'_, Arc<PauseService>>) {
+    pause.offer(PauseKind::Silence);
 }

@@ -21,6 +21,7 @@
     "allow-set-silence",
     "allow-set-on-fire",
     "allow-get-policy-debug",
-    "allow-debug-show-intervention"
+    "allow-debug-show-intervention",
+    "allow-open-pause"
   ]
 }

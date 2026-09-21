@@ -4,6 +4,9 @@ import { Root } from "@/app/root";
 import { Providers } from "@/app/providers";
 import "@/design-system/tokens/tokens.css";
 import "@/design-system/tokens/base.css";
+import { applyMotionPreference } from "@/lib/utils/motion";
+
+applyMotionPreference();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

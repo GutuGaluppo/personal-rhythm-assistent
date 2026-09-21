@@ -98,3 +98,13 @@ describe("My Day", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("Couldn't read your day");
   });
 });
+
+describe("Take a break", () => {
+  it("opens the pause window", async () => {
+    vi.mocked(commands.openPause).mockResolvedValue();
+    show();
+    const button = await screen.findByRole("button", { name: "Take a break" });
+    button.click();
+    expect(commands.openPause).toHaveBeenCalled();
+  });
+});

@@ -1,4 +1,5 @@
 use super::model::{Action, Answer, Energy, InterventionView, Step};
+use super::pause::{PauseKind, PauseService};
 use crate::context::signals::{ContextAssessment, SignalKind};
 use crate::persistence::error::PersistenceError;
 use crate::persistence::repositories::{interventions, settings};
@@ -88,6 +89,7 @@ pub struct InterventionManager {
     db: Arc<Database>,
     policy: Arc<PolicyService>,
     presenter: Box<dyn Presenter>,
+    pause: Arc<PauseService>,
     cfg: InterventionConfig,
     active: Mutex<Option<Active>>,
 }
@@ -97,12 +99,14 @@ impl InterventionManager {
         db: Arc<Database>,
         policy: Arc<PolicyService>,
         presenter: Box<dyn Presenter>,
+        pause: Arc<PauseService>,
         cfg: InterventionConfig,
     ) -> Self {
         Self {
             db,
             policy,
             presenter,
+            pause,
             cfg,
             active: Mutex::new(None),
         }
@@ -121,7 +125,7 @@ impl InterventionManager {
         assessment: &ContextAssessment,
         user_present: bool,
     ) -> Result<Option<InterventionView>> {
-        if !user_present || self.active.lock().unwrap().is_some() {
+        if !user_present || self.pause.is_active() || self.active.lock().unwrap().is_some() {
             return Ok(None);
         }
         let decision = self
@@ -255,8 +259,10 @@ impl InterventionManager {
                 self.record(active, now, "action", value.as_str())?;
                 match value {
                     Action::Continue => Response::Continue,
-                    Action::TakeBreak | Action::Move | Action::Meditate => Response::AcceptedBreak,
-                    Action::DoNothing => Response::DoNothing,
+                    // "Do nothing" is a silent pause, not a refusal.
+                    Action::TakeBreak | Action::Move | Action::Meditate | Action::DoNothing => {
+                        Response::AcceptedBreak
+                    }
                     Action::OnFire => Response::OnFire,
                 }
             }
@@ -272,6 +278,11 @@ impl InterventionManager {
             self.policy.respond(now, response)?;
         }
         self.presenter.close();
+        if let Answer::Action { value } = answer {
+            if let Some(kind) = pause_for(value) {
+                self.pause.offer(kind);
+            }
+        }
         Ok(None)
     }
 
@@ -334,5 +345,15 @@ impl InterventionManager {
             })?;
         }
         Ok(())
+    }
+}
+
+/// The pause a chosen action leads to, preselected on the pause window's setup screen.
+fn pause_for(action: Action) -> Option<PauseKind> {
+    match action {
+        Action::TakeBreak | Action::DoNothing => Some(PauseKind::Silence),
+        Action::Meditate => Some(PauseKind::Meditation),
+        Action::Move => Some(PauseKind::Walking),
+        Action::Continue | Action::OnFire => None,
     }
 }

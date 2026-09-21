@@ -1,4 +1,4 @@
-//! The check-in window must not have broad app permissions (IMPLEMENTATION.md §16).
+//! The check-in and pause windows must not have broad app permissions (IMPLEMENTATION.md §16).
 //! Three lists describe the same commands and must not drift apart:
 //! `build.rs` (the ACL manifest), the invoke handler in `lib.rs`, and the capabilities.
 
@@ -10,6 +10,12 @@ const INTERVENTION_WINDOW_COMMANDS: [&str; 3] = [
     "answer_intervention",
     "dismiss_intervention",
 ];
+const PAUSE_WINDOW_COMMANDS: [&str; 3] = ["get_pause_view", "start_pause", "end_pause"];
+
+/// Commands that belong to a restricted window and must stay away from the main one.
+fn restricted_commands() -> Vec<&'static str> {
+    [INTERVENTION_WINDOW_COMMANDS, PAUSE_WINDOW_COMMANDS].concat()
+}
 
 fn root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -67,32 +73,38 @@ fn the_manifest_and_the_invoke_handler_list_the_same_commands() {
     assert!(manifest_commands().len() >= 20, "list parsing looks broken");
 }
 
-#[test]
-fn the_check_in_window_can_call_exactly_three_commands_and_nothing_from_core() {
-    let (windows, permissions) = capability("intervention.json");
-    assert_eq!(windows, ["intervention"]);
-    let expected: BTreeSet<String> = INTERVENTION_WINDOW_COMMANDS
-        .iter()
-        .map(|c| allow(c))
-        .collect();
-    assert_eq!(permissions, expected);
+fn assert_window_is_minimal(file: &str, label: &str, own: &[&str]) {
+    let (windows, permissions) = capability(file);
+    assert_eq!(windows, [label]);
+    let expected: BTreeSet<String> = own.iter().map(|c| allow(c)).collect();
+    assert_eq!(permissions, expected, "{file}");
     assert!(
         permissions.iter().all(|p| !p.starts_with("core:")),
-        "no core permissions"
+        "no core permissions in {file}"
+    );
+    // ...and it cannot reach any other command.
+    for command in manifest_commands() {
+        if !own.contains(&command.as_str()) {
+            assert!(
+                !permissions.contains(&allow(&command)),
+                "{file} must not allow {command}"
+            );
+        }
+    }
+}
+
+#[test]
+fn the_check_in_window_can_call_exactly_three_commands_and_nothing_from_core() {
+    assert_window_is_minimal(
+        "intervention.json",
+        "intervention",
+        &INTERVENTION_WINDOW_COMMANDS,
     );
 }
 
 #[test]
-fn the_check_in_window_cannot_reach_the_main_screens_commands() {
-    let (_, permissions) = capability("intervention.json");
-    for command in manifest_commands() {
-        if !INTERVENTION_WINDOW_COMMANDS.contains(&command.as_str()) {
-            assert!(
-                !permissions.contains(&allow(&command)),
-                "{command} must not be allowed"
-            );
-        }
-    }
+fn the_pause_window_can_call_exactly_three_commands_and_nothing_from_core() {
+    assert_window_is_minimal("pause.json", "pause", &PAUSE_WINDOW_COMMANDS);
 }
 
 #[test]
@@ -101,8 +113,8 @@ fn the_main_window_is_granted_every_command_it_needs_and_no_more() {
     assert_eq!(windows, ["main"]);
     for command in manifest_commands() {
         let granted = permissions.contains(&allow(&command));
-        if INTERVENTION_WINDOW_COMMANDS.contains(&command.as_str()) {
-            assert!(!granted, "{command} belongs to the check-in window");
+        if restricted_commands().contains(&command.as_str()) {
+            assert!(!granted, "{command} belongs to a restricted window");
         } else {
             assert!(granted, "main window is missing {command}");
         }
@@ -116,7 +128,7 @@ fn the_main_window_is_granted_every_command_it_needs_and_no_more() {
 
 #[test]
 fn no_capability_targets_a_wildcard_window() {
-    for file in ["default.json", "intervention.json"] {
+    for file in ["default.json", "intervention.json", "pause.json"] {
         let (windows, _) = capability(file);
         assert!(
             windows.iter().all(|w| w != "*"),

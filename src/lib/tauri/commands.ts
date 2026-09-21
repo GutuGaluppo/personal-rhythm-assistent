@@ -6,6 +6,8 @@ import type {
   InterventionAnswer,
   InterventionView,
   MyDay,
+  PauseKind,
+  PauseView,
   PolicyDebug,
 } from "@/types";
 
@@ -37,3 +39,16 @@ export const dismissIntervention = (id: string) => invoke<void>("dismiss_interve
 
 /** Developer preview; records nothing. */
 export const debugShowIntervention = () => invoke<void>("debug_show_intervention");
+
+// The pause window may call only these three (see capabilities/pause.json).
+export const getPauseView = () => invoke<PauseView | null>("get_pause_view");
+
+/** `minutes` is 1-60; the presets are 3, 5 and 10. */
+export const startPause = (kind: PauseKind, minutes: number) =>
+  invoke<PauseView>("start_pause", { kind, minutes });
+
+/** Coming back, or ending early: the core clears the pause and closes the window. */
+export const endPause = () => invoke<void>("end_pause");
+
+/** From the main window: opens the pause window on its setup screen. */
+export const openPause = () => invoke<void>("open_pause");
