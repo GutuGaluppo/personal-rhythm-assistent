@@ -6,7 +6,8 @@
 //! is throttled in the background.
 
 use crate::persistence::error::PersistenceError;
-use crate::persistence::time;
+use crate::persistence::repositories::pauses;
+use crate::persistence::{time, Database};
 use crate::policy::engine::Response;
 use crate::policy::service::PolicyService;
 use chrono::{DateTime, Duration, Utc};
@@ -24,6 +25,17 @@ pub enum PauseKind {
     Meditation,
     Walking,
     Stretching,
+}
+
+impl PauseKind {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Silence => "silence",
+            Self::Meditation => "meditation",
+            Self::Walking => "walking",
+            Self::Stretching => "stretching",
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -81,12 +93,13 @@ pub trait PausePresenter: Send + Sync {
     fn close(&self);
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 enum State {
     Setup {
         suggested: PauseKind,
     },
     Running {
+        id: String,
         kind: PauseKind,
         started_at: DateTime<Utc>,
         ends_at: DateTime<Utc>,
@@ -95,14 +108,20 @@ enum State {
 
 pub struct PauseService {
     policy: Arc<PolicyService>,
+    db: Arc<Database>,
     presenter: Box<dyn PausePresenter>,
     state: Mutex<Option<State>>,
 }
 
 impl PauseService {
-    pub fn new(policy: Arc<PolicyService>, presenter: Box<dyn PausePresenter>) -> Self {
+    pub fn new(
+        policy: Arc<PolicyService>,
+        db: Arc<Database>,
+        presenter: Box<dyn PausePresenter>,
+    ) -> Self {
         Self {
             policy,
+            db,
             presenter,
             state: Mutex::new(None),
         }
@@ -135,13 +154,20 @@ impl PauseService {
             return Err(PauseError::AlreadyRunning);
         }
         self.policy.respond(now, Response::AcceptedBreak)?;
+        let id = format!("pause-{}", time::format(now));
+        self.db.with_conn(|c| {
+            pauses::insert(c, &id, &time::format(now), kind.as_str(), minutes * 60)
+        })?;
         let ends_at = now + Duration::minutes(minutes.into());
-        *state = Some(State::Running {
+        let running = State::Running {
+            id,
             kind,
             started_at: now,
             ends_at,
-        });
-        Ok(view_of(&state.expect("just set"), now))
+        };
+        let view = view_of(&running, now);
+        *state = Some(running);
+        Ok(view)
     }
 
     pub fn view(&self, now: DateTime<Utc>) -> Option<PauseView> {
@@ -159,14 +185,24 @@ impl PauseService {
     }
 
     /// The user is back (or ended early): clears the pause and closes the window.
-    pub fn end(&self) {
-        self.state.lock().unwrap().take();
+    pub fn end(&self, now: DateTime<Utc>) {
+        self.finish(now);
         self.presenter.close();
     }
 
     /// The window went away on its own: same as coming back, nothing to close.
-    pub fn window_closed(&self) {
-        self.state.lock().unwrap().take();
+    pub fn window_closed(&self, now: DateTime<Utc>) {
+        self.finish(now);
+    }
+
+    /// Clears the pause and records when it ended.
+    fn finish(&self, now: DateTime<Utc>) {
+        let finished = self.state.lock().unwrap().take();
+        if let Some(State::Running { id, .. }) = finished {
+            let _ = self
+                .db
+                .with_conn(|c| pauses::set_ended(c, &id, &time::format(now)));
+        }
     }
 }
 
@@ -183,6 +219,7 @@ fn view_of(state: &State, now: DateTime<Utc>) -> PauseView {
             kind,
             started_at,
             ends_at,
+            ..
         } => PauseView {
             phase: if now >= ends_at {
                 PausePhase::Done

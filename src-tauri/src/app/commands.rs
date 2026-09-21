@@ -12,6 +12,7 @@ use crate::policy::rules::PolicyDecision;
 use crate::policy::service::{PolicyService, PolicyView};
 use crate::privacy::retention::{self, RetentionPolicy};
 use crate::privacy::toggles::{self, PrivacyToggles};
+use crate::reports::daily::{self, DailySummary};
 use crate::reports::my_day::{self, MyDay};
 use crate::sensors::service::SharedSnapshot;
 use crate::sensors::system_state::SensorSnapshot;
@@ -251,7 +252,7 @@ pub fn start_pause(
 /// Coming back, or ending early: clears the pause and closes the window.
 #[tauri::command]
 pub fn end_pause(pause: State<'_, Arc<PauseService>>) {
-    pause.end();
+    pause.end(chrono::Utc::now());
 }
 
 /// From the main window ("Take a break"): opens the pause window on its setup screen.
@@ -300,4 +301,43 @@ pub fn get_interest_suggestion(db: State<'_, Arc<Database>>) -> Result<Option<In
     let today = chrono::Local::now().format("%Y-%m-%d").to_string();
     db.with_conn(|c| interest_inbox::suggestion_for(c, &today))
         .map_err(err)
+}
+
+// ---- Daily summary ----
+
+/// `date` is "YYYY-MM-DD" in the user's local time; omitted means today.
+#[tauri::command]
+pub fn get_daily_summary(
+    db: State<'_, Arc<Database>>,
+    sessions: State<'_, Arc<Mutex<SessionService>>>,
+    date: Option<String>,
+) -> Result<DailySummary, String> {
+    let (now, tz) = (chrono::Utc::now(), daily::local_offset());
+    let date = match date {
+        Some(d) => daily::parse_date(&d).map_err(err)?,
+        None => daily::today(now, tz),
+    };
+    let service = sessions.lock().unwrap();
+    daily::summary_for(&db, &service, now, tz, date).map_err(err)
+}
+
+/// Days that have something to show, newest first (always includes today).
+#[tauri::command]
+pub fn list_summary_days(db: State<'_, Arc<Database>>) -> Result<Vec<String>, String> {
+    db.with_conn(|c| daily::list_days(c, chrono::Utc::now(), daily::local_offset()))
+        .map_err(err)
+}
+
+/// Saves the user's own words about a day; empty text clears it.
+#[tauri::command]
+pub fn save_reflection(
+    db: State<'_, Arc<Database>>,
+    date: String,
+    text: String,
+) -> Result<(), String> {
+    let date = daily::parse_date(&date).map_err(err)?;
+    db.with_conn(|c| {
+        daily::save_reflection(c, date, &text, chrono::Utc::now(), daily::local_offset())
+    })
+    .map_err(err)
 }

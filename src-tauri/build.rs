@@ -33,6 +33,9 @@ const COMMANDS: &[&str] = &[
     "restore_interest",
     "delete_interest",
     "get_interest_suggestion",
+    "get_daily_summary",
+    "list_summary_days",
+    "save_reflection",
 ];
 
 fn main() {

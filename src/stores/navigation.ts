@@ -4,6 +4,7 @@ import { create } from "zustand";
 const PRODUCT_PAGES = [
   { id: "my-day", label: "My Day" },
   { id: "interest-inbox", label: "Interest Inbox" },
+  { id: "history", label: "History" },
   { id: "settings", label: "Settings" },
 ] as const;
 

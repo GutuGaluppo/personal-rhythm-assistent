@@ -126,3 +126,23 @@ export type Interest = {
   createdAt: string;
   archivedAt: string | null;
 };
+
+export type CategoryShare = {
+  category: Category;
+  minutes: number;
+  /** 0 to 1 of the day's active time. */
+  share: number;
+};
+
+export type DailySummary = {
+  /** Local calendar day, YYYY-MM-DD. */
+  date: string;
+  isFinal: boolean;
+  activeMinutes: number;
+  categoryDistribution: CategoryShare[];
+  longestSessionMinutes: number;
+  contextSwitches: number;
+  pausesTaken: number;
+  reflectiveQuestion: string;
+  reflection: string | null;
+};

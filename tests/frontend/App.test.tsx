@@ -44,6 +44,12 @@ describe("App", () => {
     renderWithProviders(<App />);
     const nav = within(screen.getByRole("navigation", { name: "Main" }));
     const labels = nav.getAllByRole("button").map((b) => b.textContent);
-    expect(labels).toEqual(["My Day", "Interest Inbox", "Settings", "Context (developer)"]);
+    expect(labels).toEqual([
+      "My Day",
+      "Interest Inbox",
+      "History",
+      "Settings",
+      "Context (developer)",
+    ]);
   });
 });

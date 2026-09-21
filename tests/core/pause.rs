@@ -32,10 +32,10 @@ impl PausePresenter for Fake {
 
 fn rig() -> (PauseService, Arc<PolicyService>, Arc<Mutex<Log>>) {
     let db = Arc::new(Database::open_in_memory().unwrap());
-    let policy = Arc::new(PolicyService::new(db, PolicyConfig::default()));
+    let policy = Arc::new(PolicyService::new(db.clone(), PolicyConfig::default()));
     let log = Arc::new(Mutex::new(Log::default()));
     (
-        PauseService::new(policy.clone(), Box::new(Fake(log.clone()))),
+        PauseService::new(policy.clone(), db, Box::new(Fake(log.clone()))),
         policy,
         log,
     )
@@ -118,7 +118,7 @@ fn only_one_pause_at_a_time() {
 fn ending_returns_the_user_and_closes_the_window() {
     let (svc, _, log) = rig();
     svc.start(PauseKind::Silence, 5, t(10, 0, 0)).unwrap();
-    svc.end();
+    svc.end(t(10, 6, 0));
     assert!(svc.view(t(10, 1, 0)).is_none());
     assert!(!svc.is_active());
     assert_eq!(log.lock().unwrap().closed, 1);
@@ -128,7 +128,7 @@ fn ending_returns_the_user_and_closes_the_window() {
 fn a_pause_can_be_ended_early_without_consequence() {
     let (svc, policy, _) = rig();
     svc.start(PauseKind::Silence, 10, t(10, 0, 0)).unwrap();
-    svc.end();
+    svc.end(t(10, 6, 0));
     // Nothing punishes leaving early: no refusal is recorded.
     assert_eq!(policy.state().unwrap().refusal_streak, 0);
 }
@@ -137,7 +137,7 @@ fn a_pause_can_be_ended_early_without_consequence() {
 fn a_new_pause_can_start_after_coming_back() {
     let (svc, _, _) = rig();
     svc.start(PauseKind::Silence, 3, t(10, 0, 0)).unwrap();
-    svc.end();
+    svc.end(t(10, 6, 0));
     assert!(svc.start(PauseKind::Stretching, 3, t(10, 10, 0)).is_ok());
 }
 
@@ -147,7 +147,7 @@ fn the_done_screen_stays_until_the_user_comes_back() {
     svc.start(PauseKind::Silence, 3, t(10, 0, 0)).unwrap();
     assert_eq!(svc.view(t(11, 0, 0)).unwrap().phase, PausePhase::Done);
     assert!(svc.is_active(), "still a pause until the user returns");
-    svc.end();
+    svc.end(t(10, 6, 0));
     assert!(svc.view(t(11, 0, 0)).is_none());
 }
 
@@ -155,7 +155,7 @@ fn the_done_screen_stays_until_the_user_comes_back() {
 fn closing_the_window_from_outside_leaves_the_pause() {
     let (svc, _, log) = rig();
     svc.start(PauseKind::Silence, 5, t(10, 0, 0)).unwrap();
-    svc.window_closed();
+    svc.window_closed(t(10, 1, 0));
     assert!(svc.view(t(10, 1, 0)).is_none());
     assert_eq!(log.lock().unwrap().closed, 0, "nothing left to close");
 }

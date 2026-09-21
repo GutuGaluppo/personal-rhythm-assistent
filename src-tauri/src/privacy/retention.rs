@@ -1,7 +1,9 @@
 //! Retention configuration model (IMPLEMENTATION.md §21).
 
 use crate::persistence::error::{PersistenceError, Result};
-use crate::persistence::repositories::{activity_events, interventions, sessions, settings};
+use crate::persistence::repositories::{
+    activity_events, daily_summaries, interventions, pauses, sessions, settings,
+};
 use crate::persistence::time;
 use chrono::{DateTime, Duration, Utc};
 use rusqlite::Connection;
@@ -14,7 +16,7 @@ const SETTINGS_KEY: &str = "retention_policy";
 pub struct RetentionPolicy {
     pub activity_events_days: u32,
     pub sessions_days: u32,
-    /// `None` = keep indefinitely. Applied once daily summaries exist (Milestone 10).
+    /// `None` = keep indefinitely.
     pub daily_summaries_days: Option<u32>,
 }
 
@@ -48,6 +50,8 @@ pub struct RetentionReport {
     pub activity_events_deleted: usize,
     pub sessions_deleted: usize,
     pub interventions_deleted: usize,
+    pub pauses_deleted: usize,
+    pub daily_summaries_deleted: usize,
 }
 
 pub fn load(conn: &Connection) -> Result<RetentionPolicy> {
@@ -70,5 +74,16 @@ pub fn apply(conn: &Connection, now: DateTime<Utc>) -> Result<RetentionReport> {
         sessions_deleted: sessions::delete_started_before(conn, &sessions_cutoff)?,
         // Kept as long as sessions, so summaries can still count accepted/declined check-ins.
         interventions_deleted: interventions::delete_before(conn, &sessions_cutoff)?,
+        pauses_deleted: pauses::delete_before(conn, &sessions_cutoff)?,
+        // Kept indefinitely unless the user chose a limit.
+        daily_summaries_deleted: match policy.daily_summaries_days {
+            Some(days) => daily_summaries::delete_before(
+                conn,
+                &(now - Duration::days(days.into()))
+                    .format("%Y-%m-%d")
+                    .to_string(),
+            )?,
+            None => 0,
+        },
     })
 }

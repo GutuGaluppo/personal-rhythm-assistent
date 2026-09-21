@@ -19,3 +19,17 @@ export function formatRemaining(ms: number): string {
   const minutes = Math.ceil(ms / 60_000);
   return `About ${minutes} min left`;
 }
+
+export function formatPercent(share: number): string {
+  return `${Math.round(share * 100)}%`;
+}
+
+/** "Wednesday, March 4" from a local YYYY-MM-DD, without time zone surprises. */
+export function formatDate(isoDate: string): string {
+  const [y, m, d] = isoDate.split("-").map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
+}

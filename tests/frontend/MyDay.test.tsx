@@ -1,7 +1,9 @@
 import { screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MyDay } from "@/features/my-day/MyDay";
 import * as commands from "@/lib/tauri/commands";
 import type { MyDay as MyDayData } from "@/types";
+import { useNavigation } from "@/stores/navigation";
 import { renderWithProviders } from "./utils";
 
 vi.mock("@/lib/tauri/commands");
@@ -110,5 +112,14 @@ describe("Take a break", () => {
     const button = await screen.findByRole("button", { name: "Take a break" });
     button.click();
     expect(commands.openPause).toHaveBeenCalled();
+  });
+});
+
+describe("the day's summary", () => {
+  it("is one click away from Today", async () => {
+    show();
+    const today = await card("Today");
+    await userEvent.click(today.getByRole("button", { name: "See the day's summary" }));
+    expect(useNavigation.getState().page).toBe("history");
   });
 });

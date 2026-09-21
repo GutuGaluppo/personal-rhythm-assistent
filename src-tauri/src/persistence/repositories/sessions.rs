@@ -61,6 +61,16 @@ pub fn list_open(conn: &Connection) -> Result<Vec<Session>> {
     rows.map(|r| r?).collect()
 }
 
+/// Sessions that overlap `[from, to)`: they started before `to` and had not ended by `from`.
+pub fn list_overlapping(conn: &Connection, from: &str, to: &str) -> Result<Vec<Session>> {
+    let (from, to) = (time::normalize(from)?, time::normalize(to)?);
+    let mut stmt = conn.prepare(&format!(
+        "{SELECT} WHERE started_at < ?2 AND (ended_at IS NULL OR ended_at > ?1) ORDER BY started_at"
+    ))?;
+    let rows = stmt.query_map(params![from, to], from_row)?;
+    rows.map(|r| r?).collect()
+}
+
 pub fn count(conn: &Connection) -> Result<u64> {
     Ok(conn.query_row("SELECT COUNT(*) FROM sessions", [], |r| r.get(0))?)
 }

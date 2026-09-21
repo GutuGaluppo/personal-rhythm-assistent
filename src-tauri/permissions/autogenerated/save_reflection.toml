@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-save-reflection"
+description = "Enables the save_reflection command without any pre-configured scope."
+commands.allow = ["save_reflection"]
+
+[[permission]]
+identifier = "deny-save-reflection"
+description = "Denies the save_reflection command without any pre-configured scope."
+commands.deny = ["save_reflection"]

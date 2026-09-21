@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/Card";
 import { InterestSuggestion } from "@/features/interest-inbox/InterestSuggestion";
 import { openPause } from "@/lib/tauri/commands";
+import { useNavigation } from "@/stores/navigation";
 import { formatAgo, formatDuration } from "@/lib/utils/format";
 import type { ActivityState, MyDay as MyDayData } from "@/types";
 import { useMyDay } from "./useMyDay";
@@ -31,6 +32,7 @@ export function MyDay() {
 }
 
 function Content({ day }: { day: MyDayData }) {
+  const go = useNavigation((s) => s.go);
   if (!day.trackingEnabled) {
     return (
       <p>
@@ -70,6 +72,11 @@ function Content({ day }: { day: MyDayData }) {
             <Stat label="Active time" value={formatDuration(day.activeMinutesToday)} />
             <Stat label="Context switches" value={String(day.contextSwitchesToday)} />
           </dl>
+          <p>
+            <button type="button" onClick={() => go("history")}>
+              See the day&apos;s summary
+            </button>
+          </p>
         </Card>
 
         <Card title="Last real break" labelledBy="card-break">

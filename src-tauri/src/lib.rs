@@ -50,6 +50,14 @@ pub fn run() {
             let db = Arc::new(Database::open(&db_path)?);
             // Enforce the stored retention policy at startup.
             db.with_conn(|conn| privacy::retention::apply(conn, chrono::Utc::now()))?;
+            // Freeze the summary of every day that is over, before its sessions age out.
+            db.with_conn(|conn| {
+                reports::daily::finalize_past_days(
+                    conn,
+                    chrono::Utc::now(),
+                    reports::daily::local_offset(),
+                )
+            })?;
 
             let bus = Arc::new(EventBus::new());
             let snapshot = SharedSnapshot::default();
@@ -77,6 +85,7 @@ pub fn run() {
             let policy = Arc::new(PolicyService::new(db.clone(), PolicyConfig::default()));
 
             let db_for_manager = db.clone();
+            let db_for_pause = db.clone();
             let db_for_scheduler = db.clone();
             let sessions_for_scheduler = sessions.clone();
             let snapshot_for_scheduler = snapshot.clone();
@@ -89,6 +98,7 @@ pub fn run() {
 
             let pause = Arc::new(PauseService::new(
                 policy.clone(),
+                db_for_pause,
                 Box::new(TauriPausePresenter::new(app.handle().clone())),
             ));
             app.manage(pause.clone());
@@ -143,6 +153,9 @@ pub fn run() {
             app::commands::restore_interest,
             app::commands::delete_interest,
             app::commands::get_interest_suggestion,
+            app::commands::get_daily_summary,
+            app::commands::list_summary_days,
+            app::commands::save_reflection,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Personal Rhythm Assistant");

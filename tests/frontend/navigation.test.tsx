@@ -66,8 +66,13 @@ describe("menu bar navigation", () => {
 });
 
 describe("pages", () => {
-  it("lists My Day, Interest Inbox, Settings, in that order", () => {
-    expect(pagesFor(false).map((p) => p.id)).toEqual(["my-day", "interest-inbox", "settings"]);
+  it("lists My Day, Interest Inbox, History, Settings, in that order", () => {
+    expect(pagesFor(false).map((p) => p.id)).toEqual([
+      "my-day",
+      "interest-inbox",
+      "history",
+      "settings",
+    ]);
   });
 
   it("recognises only real pages", () => {

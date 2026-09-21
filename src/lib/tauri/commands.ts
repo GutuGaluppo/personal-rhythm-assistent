@@ -3,6 +3,7 @@ import type {
   AppMapping,
   Category,
   ContextAssessment,
+  DailySummary,
   InterventionAnswer,
   InterventionView,
   Interest,
@@ -70,3 +71,16 @@ export const deleteInterest = (id: number) => invoke<boolean>("delete_interest",
 
 /** One suggestion per day, the same one all day; null when the inbox has nothing active. */
 export const getInterestSuggestion = () => invoke<Interest | null>("get_interest_suggestion");
+
+// ---- Daily summary ----
+
+/** `date` is YYYY-MM-DD in local time; omitted means today. */
+export const getDailySummary = (date?: string) =>
+  invoke<DailySummary>("get_daily_summary", { date: date ?? null });
+
+/** Days that have something to show, newest first. Always includes today. */
+export const listSummaryDays = () => invoke<string[]>("list_summary_days");
+
+/** The user's own words about a day. Empty text clears it. */
+export const saveReflection = (date: string, text: string) =>
+  invoke<void>("save_reflection", { date, text });

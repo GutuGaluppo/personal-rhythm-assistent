@@ -75,6 +75,7 @@ fn rig() -> Rig {
     let pause_log = Arc::new(Mutex::new(PauseLog::default()));
     let pause = Arc::new(PauseService::new(
         policy.clone(),
+        db.clone(),
         Box::new(FakePausePresenter(pause_log.clone())),
     ));
     let manager = InterventionManager::new(
@@ -564,6 +565,7 @@ fn wording_rotation_survives_a_restart() {
                     Arc::new(Database::open_in_memory().unwrap()),
                     PolicyConfig::default(),
                 )),
+                Arc::new(Database::open_in_memory().unwrap()),
                 Box::new(FakePausePresenter(Arc::new(
                     Mutex::new(PauseLog::default()),
                 ))),
@@ -732,7 +734,7 @@ fn nothing_interrupts_a_pause_in_progress() {
         .unwrap()
         .is_none());
 
-    r.pause.end();
+    r.pause.end(t(10, 6));
     // (the accepted break started a 60 minute cooldown at 10:00; by 12:00 it is over)
     assert!(r
         .manager

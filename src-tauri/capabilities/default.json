@@ -28,6 +28,9 @@
     "allow-archive-interest",
     "allow-restore-interest",
     "allow-delete-interest",
-    "allow-get-interest-suggestion"
+    "allow-get-interest-suggestion",
+    "allow-get-daily-summary",
+    "allow-list-summary-days",
+    "allow-save-reflection"
   ]
 }

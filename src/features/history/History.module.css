@@ -1,0 +1,24 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.heading {
+  margin: 0;
+  font-size: 1.5rem;
+}
+.nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.day {
+  margin: 0;
+  font-size: 1.1rem;
+  flex: 1;
+  text-align: center;
+}
+.muted {
+  color: var(--color-text-muted);
+  font-weight: 400;
+}

@@ -143,7 +143,7 @@ fn build_pause(app: &AppHandle) -> tauri::Result<()> {
     window.on_window_event(move |event| {
         if matches!(event, WindowEvent::Destroyed) {
             if let Some(pause) = handle.try_state::<Arc<PauseService>>() {
-                pause.window_closed();
+                pause.window_closed(Utc::now());
             }
         }
     });
