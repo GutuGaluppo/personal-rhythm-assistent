@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Main window capabilities. The intervention window gets its own, smaller capability (Milestone 7).",
+  "windows": ["main"],
+  "permissions": ["core:default"]
+}
