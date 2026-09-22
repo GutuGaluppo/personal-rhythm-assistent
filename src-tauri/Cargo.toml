@@ -92,3 +92,7 @@ path = "../tests/core/privacy.rs"
 [[test]]
 name = "hardening"
 path = "../tests/core/hardening.rs"
+
+[[test]]
+name = "lifecycle"
+path = "../tests/core/lifecycle.rs"

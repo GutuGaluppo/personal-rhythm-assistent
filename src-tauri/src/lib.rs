@@ -122,6 +122,15 @@ pub fn run() {
             app.manage(policy);
             Ok(())
         })
+        // Closing the window hides it: the app lives in the menu bar.
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                if app::lifecycle::hide_instead_of_closing(window.label()) {
+                    api.prevent_close();
+                    let _ = window.hide();
+                }
+            }
+        })
         .invoke_handler(tauri::generate_handler![
             app::commands::delete_all_local_data,
             app::commands::get_retention_policy,
@@ -161,6 +170,18 @@ pub fn run() {
             app::commands::get_data_overview,
             app::commands::list_recent_activity_events,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running Personal Rhythm Assistant");
+        .build(tauri::generate_context!())
+        .expect("error while building Personal Rhythm Assistant")
+        .run(|app, event| match event {
+            // The last window went away: stay alive. Quit passes an exit code.
+            tauri::RunEvent::ExitRequested { api, code, .. } => {
+                if app::lifecycle::keep_running_after(code) {
+                    api.prevent_exit();
+                }
+            }
+            // Clicking the Dock icon of a running app brings the window back.
+            #[cfg(target_os = "macos")]
+            tauri::RunEvent::Reopen { .. } => app::lifecycle::show_main_window(app),
+            _ => {}
+        });
 }

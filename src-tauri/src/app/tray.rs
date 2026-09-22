@@ -10,7 +10,7 @@ use std::time::Duration;
 use tauri::image::Image;
 use tauri::menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::TrayIconBuilder;
-use tauri::{AppHandle, Emitter, Manager};
+use tauri::{AppHandle, Emitter};
 
 pub const MENU_RHYTHM: &str = "how_is_my_rhythm";
 pub const MENU_INBOX: &str = "interest_inbox";
@@ -177,10 +177,7 @@ pub fn install(
 /// Brings the main window forward, optionally on a specific page (the app listens
 /// for the `navigate` event).
 fn show_main(app: &AppHandle, page: Option<&str>) {
-    if let Some(window) = app.get_webview_window("main") {
-        let _ = window.show();
-        let _ = window.set_focus();
-    }
+    super::lifecycle::show_main_window(app);
     if let Some(page) = page {
         let _ = app.emit_to("main", "navigate", page);
     }
