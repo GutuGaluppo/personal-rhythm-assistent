@@ -105,7 +105,7 @@ pub fn install(
         "I'm on fire",
         true,
         view.as_ref().is_some_and(|v| v.on_fire_until.is_some()),
-        None::<&str>,
+        Some(super::shortcuts::ON_FIRE_MENU_HINT),
     )?;
     let inbox = MenuItem::with_id(app, MENU_INBOX, "Interest Inbox", true, None::<&str>)?;
     let open = MenuItem::with_id(app, MENU_OPEN, "Open app", true, None::<&str>)?;
@@ -146,10 +146,7 @@ pub fn install(
                 MENU_INBOX => show_main(app, Some("interest-inbox")),
                 MENU_BREAK => h_pause.offer(PauseKind::Silence),
                 MENU_ON_FIRE => {
-                    let on = !h_policy
-                        .view(now, local_day_start(now))
-                        .is_ok_and(|v| v.on_fire_until.is_some());
-                    let _ = h_policy.set_on_fire(on, now);
+                    let _ = h_policy.toggle_on_fire(now, local_day_start(now));
                 }
                 MENU_SILENCE => {
                     let on = !h_policy.state().is_ok_and(|s| s.silent);

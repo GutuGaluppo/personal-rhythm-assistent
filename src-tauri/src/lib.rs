@@ -24,6 +24,7 @@ use sessions::service::SessionService;
 use sessions::sessionizer::{SessionConfig, Sessionizer};
 use std::sync::{Arc, Mutex};
 use tauri::Manager;
+use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
 
 /// Must match `identifier` in tauri.conf.json. This app's own windows are not user activity.
 const OWN_BUNDLE_ID: &str = "app.personalrhythm.assistant";
@@ -45,6 +46,21 @@ fn ignored_app_ids() -> Vec<String> {
 
 pub fn run() {
     tauri::Builder::default()
+        .plugin(
+            tauri_plugin_global_shortcut::Builder::new()
+                .with_handler(|app, shortcut, event| {
+                    if event.state() == ShortcutState::Pressed
+                        && app::shortcuts::is_on_fire(shortcut)
+                    {
+                        if let Some(policy) = app.try_state::<Arc<PolicyService>>() {
+                            let now = chrono::Utc::now();
+                            let _ =
+                                policy.toggle_on_fire(now, reports::my_day::local_day_start(now));
+                        }
+                    }
+                })
+                .build(),
+        )
         .setup(|app| {
             let db_path = app.path().app_data_dir()?.join("rhythm.sqlite");
             let db = Arc::new(Database::open(&db_path)?);
@@ -118,6 +134,8 @@ pub fn run() {
                 snapshot_for_scheduler,
             );
 
+            // If another app already holds the combination, the menu bar item still works.
+            let _ = app.global_shortcut().register(app::shortcuts::ON_FIRE);
             app::tray::install(app.handle(), policy.clone(), pause)?;
             app.manage(policy);
             Ok(())

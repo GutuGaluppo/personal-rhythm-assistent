@@ -97,6 +97,14 @@ impl PolicyService {
         })
     }
 
+    /// Switches "I'm on fire" on if it is off and off if it is on, and returns the
+    /// new state. The menu bar and the keyboard shortcut both come through here.
+    pub fn toggle_on_fire(&self, now: DateTime<Utc>, day_start: DateTime<Utc>) -> Result<bool> {
+        let on = self.view(now, day_start)?.on_fire_until.is_none();
+        self.set_on_fire(on, now)?;
+        Ok(on)
+    }
+
     pub fn answer_frequency_prompt(&self, reduce: bool) -> Result<()> {
         self.update(|s| s.answer_frequency_prompt(&self.cfg, reduce))
     }

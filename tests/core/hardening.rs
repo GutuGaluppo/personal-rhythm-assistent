@@ -228,10 +228,35 @@ fn the_shell_does_not_open_extra_doors() {
         "no global Tauri object"
     );
     assert!(security["assetProtocol"].is_null() || security["assetProtocol"]["enable"] == false);
+    // tauri.conf.json's `plugins` key is for plugin *configuration*, not for
+    // declaring one; this app configures none.
     assert!(
         conf["plugins"].is_null() || conf["plugins"].as_object().is_some_and(|p| p.is_empty()),
-        "no plugins"
+        "no plugin configuration"
     );
+    // The only plugin used is global-shortcut ("I'm on fire", Milestone 14), added
+    // in Rust and called only from Rust: no capability may grant it to a webview.
+    let cargo_toml = read(&manifest_dir().join("Cargo.toml"));
+    let plugin_deps: Vec<&str> = cargo_toml
+        .lines()
+        .filter(|l| l.trim_start().starts_with("tauri-plugin-"))
+        .map(|l| l.split_whitespace().next().unwrap())
+        .collect();
+    assert_eq!(
+        plugin_deps,
+        ["tauri-plugin-global-shortcut"],
+        "no plugin beyond the reviewed one"
+    );
+    for file in ["default.json", "intervention.json", "pause.json"] {
+        let json: serde_json::Value =
+            serde_json::from_str(&read(&manifest_dir().join("capabilities").join(file))).unwrap();
+        for p in json["permissions"].as_array().unwrap() {
+            assert!(
+                !p.as_str().unwrap().starts_with("global-shortcut"),
+                "{file} must not be granted the shortcut plugin"
+            );
+        }
+    }
 }
 
 #[test]
