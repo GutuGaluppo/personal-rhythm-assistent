@@ -48,16 +48,16 @@ pub fn run() {
         .setup(|app| {
             let db_path = app.path().app_data_dir()?.join("rhythm.sqlite");
             let db = Arc::new(Database::open(&db_path)?);
-            // Enforce the stored retention policy at startup.
-            db.with_conn(|conn| privacy::retention::apply(conn, chrono::Utc::now()))?;
-            // Freeze the summary of every day that is over, before its sessions age out.
+            // Summarise finished days, then enforce the stored retention policy, and
+            // keep doing so every hour while the app stays open.
             db.with_conn(|conn| {
-                reports::daily::finalize_past_days(
+                privacy::retention::maintain(
                     conn,
                     chrono::Utc::now(),
                     reports::daily::local_offset(),
                 )
             })?;
+            privacy::retention::spawn_maintenance(db.clone());
 
             let bus = Arc::new(EventBus::new());
             let snapshot = SharedSnapshot::default();
@@ -157,6 +157,9 @@ pub fn run() {
             app::commands::list_summary_days,
             app::commands::save_reflection,
             app::commands::get_weekly_review,
+            app::commands::delete_raw_data,
+            app::commands::get_data_overview,
+            app::commands::list_recent_activity_events,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Personal Rhythm Assistant");

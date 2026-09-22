@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-get-data-overview"
+description = "Enables the get_data_overview command without any pre-configured scope."
+commands.allow = ["get_data_overview"]
+
+[[permission]]
+identifier = "deny-get-data-overview"
+description = "Denies the get_data_overview command without any pre-configured scope."
+commands.deny = ["get_data_overview"]

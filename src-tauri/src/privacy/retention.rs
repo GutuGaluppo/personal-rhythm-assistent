@@ -87,3 +87,29 @@ pub fn apply(conn: &Connection, now: DateTime<Utc>) -> Result<RetentionReport> {
         },
     })
 }
+
+/// One maintenance pass: finished days are summarised *first*, then old data is
+/// pruned, so a day's summary is never lost to the sessions it came from.
+/// Returns what was pruned.
+pub fn maintain(
+    conn: &Connection,
+    now: DateTime<Utc>,
+    tz: chrono::FixedOffset,
+) -> Result<RetentionReport> {
+    crate::reports::daily::finalize_past_days(conn, now, tz)?;
+    apply(conn, now)
+}
+
+const MAINTENANCE_INTERVAL: std::time::Duration = std::time::Duration::from_secs(60 * 60);
+
+/// Keeps the stored retention policy honest while the app stays open for days.
+pub fn spawn_maintenance(db: std::sync::Arc<crate::persistence::Database>) {
+    std::thread::Builder::new()
+        .name("maintenance".into())
+        .spawn(move || loop {
+            std::thread::sleep(MAINTENANCE_INTERVAL);
+            let _ =
+                db.with_conn(|c| maintain(c, Utc::now(), crate::reports::daily::local_offset()));
+        })
+        .expect("spawn maintenance thread");
+}

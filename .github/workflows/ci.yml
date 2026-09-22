@@ -26,6 +26,7 @@ jobs:
       - run: npm run build
       - run: npm run lint:rust
       - run: npm run format:rust
+      - run: npm run check:network
       - run: npm run test:rust
       # Build check: compile the Tauri app without bundling.
       - run: npx tauri build --debug --no-bundle

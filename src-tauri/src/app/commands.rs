@@ -10,11 +10,13 @@ use crate::persistence::repositories::interests::Interest;
 use crate::persistence::Database;
 use crate::policy::rules::PolicyDecision;
 use crate::policy::service::{PolicyService, PolicyView};
-use crate::privacy::retention::{self, RetentionPolicy};
+use crate::privacy::inventory::{self, DataOverview};
+use crate::privacy::retention::{self, RetentionPolicy, RetentionReport};
 use crate::privacy::toggles::{self, PrivacyToggles};
 use crate::reports::daily::{self, DailySummary};
 use crate::reports::my_day::{self, MyDay};
 use crate::reports::weekly::{self, WeeklyConfig, WeeklyReview};
+use crate::sensors::event::ActivityEvent;
 use crate::sensors::service::SharedSnapshot;
 use crate::sensors::system_state::SensorSnapshot;
 use crate::sessions::classification::{AppMapping, Classification};
@@ -28,9 +30,37 @@ fn err(e: impl std::fmt::Display) -> String {
     e.to_string()
 }
 
+/// Removes everything stored on this device, including what the app holds in memory.
 #[tauri::command]
-pub fn delete_all_local_data(db: State<'_, Arc<Database>>) -> Result<(), String> {
-    db.delete_all_local_data().map_err(err)
+pub fn delete_all_local_data(
+    db: State<'_, Arc<Database>>,
+    classification: State<'_, Arc<Classification>>,
+) -> Result<(), String> {
+    db.delete_all_local_data().map_err(err)?;
+    // The user's category choices are cached in memory; they are gone from the
+    // database now, so the cache must not keep applying them.
+    db.with_conn(|c| classification.reload(c)).map_err(err)
+}
+
+/// Removes the raw activity events only. Returns how many.
+#[tauri::command]
+pub fn delete_raw_data(db: State<'_, Arc<Database>>) -> Result<usize, String> {
+    db.delete_raw_data().map_err(err)
+}
+
+#[tauri::command]
+pub fn get_data_overview(db: State<'_, Arc<Database>>) -> Result<DataOverview, String> {
+    db.with_conn(inventory::overview).map_err(err)
+}
+
+/// The newest raw events, so the user can see exactly what is kept. At most 200.
+#[tauri::command]
+pub fn list_recent_activity_events(
+    db: State<'_, Arc<Database>>,
+    limit: u32,
+) -> Result<Vec<ActivityEvent>, String> {
+    db.with_conn(|c| inventory::recent_events(c, limit))
+        .map_err(err)
 }
 
 #[tauri::command]
@@ -38,13 +68,18 @@ pub fn get_retention_policy(db: State<'_, Arc<Database>>) -> Result<RetentionPol
     db.with_conn(retention::load).map_err(err)
 }
 
+/// Changes the policy and applies it straight away, so what the user sees kept
+/// is what is kept. Returns what was removed.
 #[tauri::command]
 pub fn set_retention_policy(
     db: State<'_, Arc<Database>>,
     policy: RetentionPolicy,
-) -> Result<(), String> {
-    db.with_conn(|conn| retention::save(conn, &policy))
-        .map_err(err)
+) -> Result<RetentionReport, String> {
+    db.with_conn(|conn| {
+        retention::save(conn, &policy)?;
+        retention::maintain(conn, chrono::Utc::now(), daily::local_offset())
+    })
+    .map_err(err)
 }
 
 #[tauri::command]

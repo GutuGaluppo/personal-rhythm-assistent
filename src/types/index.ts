@@ -193,3 +193,48 @@ export type WeeklyReview = {
   observations: Observation[];
   reflectiveQuestion: string;
 };
+
+export type PrivacyToggles = {
+  activeApplication: boolean;
+  activeTime: boolean;
+  idleDetection: boolean;
+  // Not built yet: always off, and cannot be switched on.
+  windowTitle: boolean;
+  keyboardMouseRhythm: boolean;
+  calendar: boolean;
+  cloudProcessing: boolean;
+};
+
+export type RetentionPolicy = {
+  activityEventsDays: number;
+  sessionsDays: number;
+  /** null keeps daily summaries indefinitely. */
+  dailySummariesDays: number | null;
+};
+
+export type RetentionReport = {
+  activityEventsDeleted: number;
+  sessionsDeleted: number;
+  interventionsDeleted: number;
+  pausesDeleted: number;
+  dailySummariesDeleted: number;
+};
+
+export type TableStats = { count: number; oldest: string | null; newest: string | null };
+
+export type DataOverview = {
+  activityEvents: TableStats;
+  sessions: TableStats;
+  checkIns: TableStats;
+  pauses: TableStats;
+  dailySummaries: TableStats;
+  interests: TableStats;
+  appCategoryOverrides: number;
+  databaseBytes: number;
+};
+
+/** A raw event exactly as stored: app names, switches and idle lengths, nothing else. */
+export type ActivityEvent =
+  | { type: "active_application"; timestamp: string; bundleId: string; applicationName: string }
+  | { type: "application_switch"; timestamp: string; fromBundleId: string; toBundleId: string }
+  | { type: "idle"; timestamp: string; seconds: number };

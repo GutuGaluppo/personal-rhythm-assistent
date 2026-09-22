@@ -73,6 +73,16 @@ pub fn latest_idle_at_least(conn: &Connection, min_seconds: u32) -> Result<Optio
         })?)
 }
 
+/// The newest events first.
+pub fn list_recent(conn: &Connection, limit: u32) -> Result<Vec<ActivityEvent>> {
+    let mut stmt = conn.prepare(
+        "SELECT timestamp, type, bundle_id, application_name, seconds, from_bundle_id, to_bundle_id
+         FROM activity_events ORDER BY timestamp DESC, id DESC LIMIT ?1",
+    )?;
+    let rows = stmt.query_map([limit], from_row)?;
+    rows.map(|r| r?).collect()
+}
+
 pub fn count(conn: &Connection) -> Result<u64> {
     Ok(conn.query_row("SELECT COUNT(*) FROM activity_events", [], |r| r.get(0))?)
 }

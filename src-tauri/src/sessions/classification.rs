@@ -67,6 +67,16 @@ impl Classification {
         })
     }
 
+    /// Re-reads the user's choices from the database, e.g. after everything was deleted.
+    pub fn reload(&self, conn: &Connection) -> Result<()> {
+        let fresh = app_mappings::list(conn)?
+            .into_iter()
+            .map(|m| (m.bundle_id, m.category))
+            .collect();
+        *self.overrides.write().unwrap() = fresh;
+        Ok(())
+    }
+
     pub fn category_for(&self, bundle_id: &str) -> Category {
         self.resolve(bundle_id).0
     }

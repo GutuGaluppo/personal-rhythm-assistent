@@ -1,7 +1,6 @@
 import { act, renderHook, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Settings } from "@/features/settings/Settings";
-import * as commands from "@/lib/tauri/commands";
 import {
   applyMotionPreference,
   readMotionPreference,
@@ -9,6 +8,7 @@ import {
   useReduceMotion,
   writeMotionPreference,
 } from "@/lib/utils/motion";
+import { mockSettingsCommands } from "./settingsMocks";
 import { renderWithProviders } from "./utils";
 
 vi.mock("@/lib/tauri/commands");
@@ -98,7 +98,7 @@ describe("motion preference", () => {
 
 describe("the Reduce motion setting", () => {
   beforeEach(() => {
-    vi.mocked(commands.listAppMappings).mockResolvedValue([]);
+    mockSettingsCommands();
   });
 
   it("is a labelled switch, off by default", () => {

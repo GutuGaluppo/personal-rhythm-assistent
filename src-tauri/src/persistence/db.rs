@@ -66,4 +66,18 @@ impl Database {
             Ok(())
         })
     }
+
+    /// Removes the raw activity events only (app and idle facts). Sessions, summaries,
+    /// check-ins and everything else stay. The file is compacted so nothing lingers.
+    pub fn delete_raw_data(&self) -> Result<usize> {
+        self.with_conn(|conn| {
+            let removed = conn.execute("DELETE FROM activity_events", [])?;
+            conn.execute(
+                "DELETE FROM sqlite_sequence WHERE name = 'activity_events'",
+                [],
+            )?;
+            conn.execute_batch("VACUUM")?;
+            Ok(removed)
+        })
+    }
 }

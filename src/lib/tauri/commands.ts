@@ -2,8 +2,10 @@ import { invoke } from "@tauri-apps/api/core";
 import type {
   AppMapping,
   Category,
+  ActivityEvent,
   ContextAssessment,
   DailySummary,
+  DataOverview,
   InterventionAnswer,
   InterventionView,
   Interest,
@@ -11,6 +13,9 @@ import type {
   PauseKind,
   PauseView,
   PolicyDebug,
+  PrivacyToggles,
+  RetentionPolicy,
+  RetentionReport,
   WeeklyReview,
 } from "@/types";
 
@@ -90,3 +95,29 @@ export const saveReflection = (date: string, text: string) =>
 
 /** The last seven local days, ending today. */
 export const getWeeklyReview = () => invoke<WeeklyReview>("get_weekly_review");
+
+// ---- Privacy ----
+
+export const getPrivacyToggles = () => invoke<PrivacyToggles>("get_privacy_toggles");
+
+/** Resolves to what was actually stored: features that are not built yet stay off. */
+export const setPrivacyToggles = (toggles: PrivacyToggles) =>
+  invoke<PrivacyToggles>("set_privacy_toggles", { toggles });
+
+export const getRetentionPolicy = () => invoke<RetentionPolicy>("get_retention_policy");
+
+/** Applies straight away and resolves to what was removed. */
+export const setRetentionPolicy = (policy: RetentionPolicy) =>
+  invoke<RetentionReport>("set_retention_policy", { policy });
+
+export const getDataOverview = () => invoke<DataOverview>("get_data_overview");
+
+/** The newest raw events, newest first. At most 200. */
+export const listRecentActivityEvents = (limit: number) =>
+  invoke<ActivityEvent[]>("list_recent_activity_events", { limit });
+
+/** Removes the raw app and idle events only. Resolves to how many. */
+export const deleteRawData = () => invoke<number>("delete_raw_data");
+
+/** Removes everything the app stored on this device. */
+export const deleteAllLocalData = () => invoke<void>("delete_all_local_data");

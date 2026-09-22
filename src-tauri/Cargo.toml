@@ -84,3 +84,11 @@ path = "../tests/core/daily_summary.rs"
 [[test]]
 name = "weekly_review"
 path = "../tests/core/weekly_review.rs"
+
+[[test]]
+name = "privacy"
+path = "../tests/core/privacy.rs"
+
+[[test]]
+name = "hardening"
+path = "../tests/core/hardening.rs"

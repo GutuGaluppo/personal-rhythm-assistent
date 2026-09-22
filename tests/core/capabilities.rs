@@ -111,6 +111,16 @@ fn the_pause_window_can_call_exactly_three_commands_and_nothing_from_core() {
 fn the_main_window_is_granted_every_command_it_needs_and_no_more() {
     let (windows, permissions) = capability("default.json");
     assert_eq!(windows, ["main"]);
+    // From Tauri core the screens need one thing: to hear the menu bar ask for a page.
+    let core: Vec<&String> = permissions
+        .iter()
+        .filter(|p| p.starts_with("core:"))
+        .collect();
+    assert_eq!(
+        core,
+        ["core:event:default"],
+        "least privilege: no broader core permission"
+    );
     for command in manifest_commands() {
         let granted = permissions.contains(&allow(&command));
         if restricted_commands().contains(&command.as_str()) {

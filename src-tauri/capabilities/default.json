@@ -4,7 +4,7 @@
   "description": "Main window: everything the app screens need, but not the check-in window's own commands.",
   "windows": ["main"],
   "permissions": [
-    "core:default",
+    "core:event:default",
     "allow-delete-all-local-data",
     "allow-get-retention-policy",
     "allow-set-retention-policy",
@@ -32,6 +32,9 @@
     "allow-get-daily-summary",
     "allow-list-summary-days",
     "allow-save-reflection",
-    "allow-get-weekly-review"
+    "allow-get-weekly-review",
+    "allow-delete-raw-data",
+    "allow-get-data-overview",
+    "allow-list-recent-activity-events"
   ]
 }

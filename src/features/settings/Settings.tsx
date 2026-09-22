@@ -1,12 +1,20 @@
 import { useState } from "react";
 import { readMotionPreference, writeMotionPreference } from "@/lib/utils/motion";
 import { AppCategories } from "./AppCategories";
+import { PermissionsNote } from "./PermissionsNote";
+import { PrivacySettings } from "./PrivacySettings";
+import { RetentionSettings } from "./RetentionSettings";
+import { YourData } from "./YourData";
 import styles from "./Settings.module.css";
 
 export function Settings() {
   return (
     <div className={styles.page}>
       <h1 className={styles.heading}>Settings</h1>
+      <PrivacySettings />
+      <RetentionSettings />
+      <YourData />
+      <PermissionsNote />
       <MotionSetting />
       <section aria-labelledby="apps-heading">
         <h2 id="apps-heading">Apps &amp; categories</h2>
