@@ -49,23 +49,6 @@
   gap: var(--space-8);
   justify-content: center;
 }
-.chip,
-.chipSelected {
-  padding: var(--space-4) var(--space-16);
-  border-radius: var(--radius-full, 999px);
-  font: inherit;
-  cursor: pointer;
-}
-.chip {
-  border: 1px solid var(--color-border);
-  background: transparent;
-  color: var(--color-text);
-}
-.chipSelected {
-  border: 1px solid var(--color-accent);
-  background: var(--color-accent);
-  color: var(--color-bg);
-}
 .hint {
   margin: 0;
   color: var(--color-text-muted);
@@ -76,23 +59,11 @@
   gap: var(--space-8);
   margin-top: auto;
 }
-.primary,
 .quiet {
   padding: var(--space-8) var(--space-24);
   border-radius: var(--radius-md);
   font: inherit;
   cursor: pointer;
-}
-.primary {
-  border: 1px solid var(--color-accent);
-  background: var(--color-accent);
-  color: var(--color-bg);
-}
-.primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-.quiet {
   border: 1px solid var(--color-border);
   background: transparent;
   color: var(--color-text);

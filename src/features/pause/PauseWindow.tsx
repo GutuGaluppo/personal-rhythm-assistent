@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/Button";
+import { Chip } from "@/components/ui/Chip";
 import { PauseVisual } from "@/components/pause/PauseVisual";
 import { endPause, getPauseView, setPauseReason, startPause } from "@/lib/tauri/commands";
 import { formatDuration, formatRemaining } from "@/lib/utils/format";
@@ -191,15 +193,14 @@ function Setup({
       )}
 
       <div className={styles.actions}>
-        <button
+        <Button
           ref={start}
-          type="button"
-          className={styles.primary}
+          variant="primary"
           disabled={!valid}
           onClick={() => void onStart(kind, minutes, reason)}
         >
           Start
-        </button>
+        </Button>
         <button type="button" className={styles.quiet} onClick={onCancel}>
           Not now
         </button>
@@ -243,9 +244,9 @@ function Session({
         <>
           <h1 className={styles.title}>Welcome back.</h1>
           <div className={styles.actions}>
-            <button ref={action} type="button" className={styles.primary} onClick={onReturn}>
+            <Button ref={action} variant="primary" onClick={onReturn}>
               Back to work
-            </button>
+            </Button>
           </div>
         </>
       ) : remaining !== null ? (
@@ -268,9 +269,9 @@ function Session({
           <p className={styles.remaining}>{formatDuration(elapsedMinutes)} so far</p>
           <ReasonPicker value={view.reason} onChange={onReasonChange} onCommit={onReasonCommit} />
           <div className={styles.actions}>
-            <button ref={action} type="button" className={styles.primary} onClick={onReturn}>
+            <Button ref={action} variant="primary" onClick={onReturn}>
               Back to work
-            </button>
+            </Button>
           </div>
         </>
       )}
@@ -319,15 +320,14 @@ function ReasonPicker({
       <legend>Why are you pausing? (optional)</legend>
       <div className={styles.chips}>
         {REASON_CHIPS.map((c) => (
-          <button
+          <Chip
             key={c.kind}
-            type="button"
-            className={value?.kind === c.kind ? styles.chipSelected : styles.chip}
+            variant={value?.kind === c.kind ? "active" : "default"}
             aria-pressed={value?.kind === c.kind}
             onClick={() => choose(c.kind)}
           >
             {c.label}
-          </button>
+          </Chip>
         ))}
       </div>
       {value?.kind === "other" && (
