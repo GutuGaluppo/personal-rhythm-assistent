@@ -1,0 +1,223 @@
+pub mod app;
+pub mod context;
+pub mod daily_plan;
+pub mod interest_inbox;
+pub mod interventions;
+pub mod persistence;
+pub mod platform;
+pub mod policy;
+pub mod privacy;
+pub mod reports;
+pub mod sensors;
+pub mod sessions;
+
+use interventions::manager::{InterventionConfig, InterventionManager};
+use interventions::pause::PauseService;
+use interventions::window::{TauriPausePresenter, TauriPresenter};
+use persistence::Database;
+use policy::rules::PolicyConfig;
+use policy::service::PolicyService;
+use sensors::bus::EventBus;
+use sensors::collector::Collector;
+use sensors::service::{SensorService, SharedSnapshot};
+use sessions::classification::Classification;
+use sessions::service::SessionService;
+use sessions::sessionizer::{SessionConfig, Sessionizer};
+use std::sync::{Arc, Mutex};
+use tauri::Manager;
+use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
+
+/// Must match `identifier` in tauri.conf.json. This app's own windows are not user activity.
+const OWN_BUNDLE_ID: &str = "app.personalrhythm.assistant";
+
+/// System UI that takes focus when the user is away (lock screen, screen saver).
+/// It is not something the user works in, so it must not read as a context switch.
+const SYSTEM_UI_BUNDLE_IDS: [&str; 2] = ["com.apple.loginwindow", "com.apple.ScreenSaver.Engine"];
+
+/// Apps that never count as user activity: this app (by bundle id when packaged, or
+/// by the `name:` fallback for an unbundled dev binary) and system UI.
+fn ignored_app_ids() -> Vec<String> {
+    let mut ids = vec![
+        OWN_BUNDLE_ID.to_string(),
+        format!("name:{}", env!("CARGO_PKG_NAME")),
+    ];
+    ids.extend(SYSTEM_UI_BUNDLE_IDS.map(String::from));
+    ids
+}
+
+pub fn run() {
+    tauri::Builder::default()
+        .plugin(
+            tauri_plugin_global_shortcut::Builder::new()
+                .with_handler(|app, shortcut, event| {
+                    if event.state() != ShortcutState::Pressed {
+                        return;
+                    }
+                    if app::shortcuts::is_on_fire(shortcut) {
+                        if let Some(policy) = app.try_state::<Arc<PolicyService>>() {
+                            let now = chrono::Utc::now();
+                            let _ =
+                                policy.toggle_on_fire(now, reports::my_day::local_day_start(now));
+                        }
+                    } else if app::shortcuts::is_quick_pause(shortcut) {
+                        if let Some(pause) = app.try_state::<Arc<PauseService>>() {
+                            let now = chrono::Utc::now();
+                            if pause.start_quick(now).is_err() {
+                                // Already paused: just bring the window forward.
+                                pause.refocus_if_active();
+                            }
+                        }
+                    }
+                })
+                .build(),
+        )
+        .setup(|app| {
+            let db_path = app.path().app_data_dir()?.join("rhythm.sqlite");
+            let db = Arc::new(Database::open(&db_path)?);
+            // Summarise finished days, then enforce the stored retention policy, and
+            // keep doing so every hour while the app stays open.
+            db.with_conn(|conn| {
+                privacy::retention::maintain(
+                    conn,
+                    chrono::Utc::now(),
+                    reports::daily::local_offset(),
+                )
+            })?;
+            privacy::retention::spawn_maintenance(db.clone());
+
+            let bus = Arc::new(EventBus::new());
+            let snapshot = SharedSnapshot::default();
+            SensorService::new(
+                platform::default_probe(),
+                Collector::with_defaults(ignored_app_ids()),
+                db.clone(),
+                bus.clone(),
+                snapshot.clone(),
+            )
+            .spawn();
+
+            let classification = Arc::new(db.with_conn(Classification::load)?);
+            let classifier = classification.clone();
+            let sessions = Arc::new(Mutex::new(SessionService::new(
+                Sessionizer::with_classifier(
+                    SessionConfig::default(),
+                    Box::new(move |app| classifier.category_for(app)),
+                ),
+                db.clone(),
+                snapshot.clone(),
+            )));
+            SessionService::spawn(sessions.clone());
+
+            let policy = Arc::new(PolicyService::new(db.clone(), PolicyConfig::default()));
+
+            let db_for_manager = db.clone();
+            let db_for_pause = db.clone();
+            let db_for_scheduler = db.clone();
+            let sessions_for_scheduler = sessions.clone();
+            let snapshot_for_scheduler = snapshot.clone();
+            let snapshot_for_pause_watcher = snapshot.clone();
+
+            app.manage(db);
+            app.manage(sessions);
+            app.manage(classification);
+            app.manage(bus);
+            app.manage(snapshot);
+
+            let pause = Arc::new(PauseService::new(
+                policy.clone(),
+                db_for_pause,
+                Box::new(TauriPausePresenter::new(app.handle().clone())),
+            ));
+            app.manage(pause.clone());
+            interventions::presence_watcher::spawn(pause.clone(), snapshot_for_pause_watcher);
+
+            let manager = Arc::new(InterventionManager::new(
+                db_for_manager,
+                policy.clone(),
+                Box::new(TauriPresenter::new(app.handle().clone())),
+                pause.clone(),
+                InterventionConfig::default(),
+            ));
+            app.manage(manager.clone());
+            interventions::scheduler::spawn(
+                manager,
+                db_for_scheduler,
+                sessions_for_scheduler,
+                snapshot_for_scheduler,
+            );
+
+            // If another app already holds the combination, the menu bar item still works.
+            let _ = app.global_shortcut().register(app::shortcuts::ON_FIRE);
+            let _ = app.global_shortcut().register(app::shortcuts::QUICK_PAUSE);
+            app::tray::install(app.handle(), policy.clone(), pause)?;
+            app.manage(policy);
+            Ok(())
+        })
+        // Closing the window hides it: the app lives in the menu bar.
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                if app::lifecycle::hide_instead_of_closing(window.label()) {
+                    api.prevent_close();
+                    let _ = window.hide();
+                }
+            }
+        })
+        .invoke_handler(tauri::generate_handler![
+            app::commands::delete_all_local_data,
+            app::commands::get_retention_policy,
+            app::commands::set_retention_policy,
+            app::commands::get_privacy_toggles,
+            app::commands::set_privacy_toggles,
+            app::commands::get_sensor_state,
+            app::commands::get_current_session,
+            app::commands::get_my_day,
+            app::commands::list_app_mappings,
+            app::commands::set_app_category,
+            app::commands::reset_app_category,
+            app::commands::get_context_assessment,
+            app::commands::get_policy_view,
+            app::commands::set_silence,
+            app::commands::set_on_fire,
+            app::commands::get_policy_debug,
+            app::commands::get_current_intervention,
+            app::commands::answer_intervention,
+            app::commands::dismiss_intervention,
+            app::commands::debug_show_intervention,
+            app::commands::get_pause_view,
+            app::commands::start_pause,
+            app::commands::end_pause,
+            app::commands::open_pause,
+            app::commands::set_pause_reason,
+            app::commands::list_interests,
+            app::commands::add_interest,
+            app::commands::archive_interest,
+            app::commands::restore_interest,
+            app::commands::delete_interest,
+            app::commands::get_interest_suggestion,
+            app::commands::list_daily_plan,
+            app::commands::add_daily_plan_item,
+            app::commands::toggle_daily_plan_item,
+            app::commands::delete_daily_plan_item,
+            app::commands::get_daily_summary,
+            app::commands::list_summary_days,
+            app::commands::save_reflection,
+            app::commands::get_weekly_review,
+            app::commands::delete_raw_data,
+            app::commands::get_data_overview,
+            app::commands::list_recent_activity_events,
+        ])
+        .build(tauri::generate_context!())
+        .expect("error while building Personal Rhythm Assistant")
+        .run(|app, event| match event {
+            // The last window went away: stay alive. Quit passes an exit code.
+            tauri::RunEvent::ExitRequested { api, code, .. } => {
+                if app::lifecycle::keep_running_after(code) {
+                    api.prevent_exit();
+                }
+            }
+            // Clicking the Dock icon of a running app brings the window back.
+            #[cfg(target_os = "macos")]
+            tauri::RunEvent::Reopen { .. } => app::lifecycle::show_main_window(app),
+            _ => {}
+        });
+}

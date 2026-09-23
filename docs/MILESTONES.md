@@ -1,5 +1,7 @@
 # Personal Rhythm Assistant — MILESTONES.md
 
+> Current status (2026-09-22): the functional MVP has been implemented and is being run through a full-day real-world behavioral test. Milestones below remain as technical history/reference. The active delivery track is now **Design Implementation**, defined in `DESIGN_IMPLEMENTATION.md`.
+
 ## Milestone 0 — Bootstrap
 
 **Goal:** app opens and the project is healthy.
@@ -311,3 +313,38 @@ A milestone may start only when the previous milestone's exit criteria are met.
 
 Exception:
 UI polishing may run in parallel, but it may not redefine product behavior or delay core validation.
+
+
+---
+
+# Active track — Design Implementation
+
+The technical milestones above are not the current execution queue unless a behavioral or stability issue discovered during testing requires reopening them.
+
+The active visual milestones are defined in detail in `DESIGN_IMPLEMENTATION.md`.
+
+## D0 — Visual audit of current implementation
+Compare the working app against the approved Design System v0.1.
+
+## D1 — Tokens & foundations
+Apply palette, typography, spacing, radii, borders, glass, shadows, and motion tokens globally.
+
+## D2 — Official icon system
+Integrate the approved icon family and all state variants, including the warm `I'm on fire` state.
+
+## D3 — Core shell
+Implement the approved neutral ice background, blobs, sidebar/menu surfaces, window hierarchy, and reusable card patterns.
+
+## D4 — Core screens
+Refine My Day, intervention, pause, return flow, and weekly review in high fidelity.
+
+## D5 — Motion & microinteractions
+Implement pause → serene eyes, state transitions, overlays, breathing/glow, and Reduce Motion behavior.
+
+## D6 — Responsive desktop states & accessibility
+Validate window resizing, density, contrast, keyboard navigation, focus states, and reduced motion.
+
+## D7 — Visual QA in real use
+Run the finished design during normal daily use and document friction, excess decoration, visual fatigue, and state legibility.
+
+Design must not modify already validated behavioral logic unless a separate product decision is made.

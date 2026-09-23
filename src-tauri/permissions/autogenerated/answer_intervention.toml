@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-answer-intervention"
+description = "Enables the answer_intervention command without any pre-configured scope."
+commands.allow = ["answer_intervention"]
+
+[[permission]]
+identifier = "deny-answer-intervention"
+description = "Denies the answer_intervention command without any pre-configured scope."
+commands.deny = ["answer_intervention"]

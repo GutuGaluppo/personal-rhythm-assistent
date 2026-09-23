@@ -1,0 +1,64 @@
+{
+ "description": "No events for hours (app was off) must not be counted as activity.",
+ "now": "2026-03-02T11:07:00.000Z",
+ "events": [
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:00:00.000Z",
+   "bundleId": "com.microsoft.VSCode",
+   "applicationName": "Code"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:05:00.000Z",
+   "bundleId": "com.microsoft.VSCode",
+   "applicationName": "Code"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:10:00.000Z",
+   "bundleId": "com.microsoft.VSCode",
+   "applicationName": "Code"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T11:00:00.000Z",
+   "bundleId": "com.microsoft.VSCode",
+   "applicationName": "Code"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T11:05:00.000Z",
+   "bundleId": "com.microsoft.VSCode",
+   "applicationName": "Code"
+  }
+ ],
+ "expected": [
+  {
+   "id": "session-2026-03-02T09:00:00.000Z",
+   "startedAt": "2026-03-02T09:00:00.000Z",
+   "endedAt": "2026-03-02T09:10:00.000Z",
+   "activeMinutes": 10.0,
+   "idleMinutes": 0.0,
+   "contextSwitches": 0,
+   "category": "Unknown",
+   "applicationIds": [
+    "com.microsoft.VSCode"
+   ],
+   "projectId": null
+  },
+  {
+   "id": "session-2026-03-02T11:00:00.000Z",
+   "startedAt": "2026-03-02T11:00:00.000Z",
+   "endedAt": null,
+   "activeMinutes": 7.0,
+   "idleMinutes": 0.0,
+   "contextSwitches": 0,
+   "category": "Unknown",
+   "applicationIds": [
+    "com.microsoft.VSCode"
+   ],
+   "projectId": null
+  }
+ ]
+}

@@ -8,3 +8,4 @@ target/
 src-tauri/target/
 coverage/
 *.log
+src-tauri/gen/

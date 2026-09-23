@@ -1,0 +1,107 @@
+[package]
+name = "personal-rhythm-assistant"
+version = "0.1.0"
+description = "Local-first desktop companion for a healthier work rhythm"
+edition = "2021"
+rust-version = "1.82"
+
+[lib]
+name = "personal_rhythm_assistant_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon", "image-png"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# SQLite: bundled so the app has no system dependency and works offline.
+rusqlite = { version = "0.32", features = ["bundled"] }
+chrono = { version = "0.4.45", default-features = false, features = ["clock", "serde", "std"] }
+tauri-plugin-global-shortcut = "2.3.2"
+
+# Rust tests live in the top-level tests/ tree (IMPLEMENTATION.md §25).
+[[test]]
+name = "sqlite_smoke"
+path = "../tests/core/sqlite_smoke.rs"
+
+[dev-dependencies]
+tempfile = "3.27.0"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6.4"
+objc2-app-kit = { version = "0.3.2", features = ["NSWorkspace", "NSRunningApplication"] }
+objc2-foundation = { version = "0.3.2", features = ["NSString"] }
+
+[[test]]
+name = "persistence"
+path = "../tests/core/persistence.rs"
+
+[[test]]
+name = "sensors"
+path = "../tests/core/sensors.rs"
+
+[[test]]
+name = "sessions"
+path = "../tests/core/sessions.rs"
+
+[[test]]
+name = "classification"
+path = "../tests/core/classification.rs"
+
+[[test]]
+name = "my_day"
+path = "../tests/core/my_day.rs"
+
+[[test]]
+name = "context"
+path = "../tests/core/context.rs"
+
+[[test]]
+name = "policy"
+path = "../tests/core/policy.rs"
+
+[[test]]
+name = "interventions"
+path = "../tests/core/interventions.rs"
+
+[[test]]
+name = "capabilities"
+path = "../tests/core/capabilities.rs"
+
+[[test]]
+name = "pause"
+path = "../tests/core/pause.rs"
+
+[[test]]
+name = "interest_inbox"
+path = "../tests/core/interest_inbox.rs"
+
+[[test]]
+name = "daily_plan"
+path = "../tests/core/daily_plan.rs"
+
+[[test]]
+name = "daily_summary"
+path = "../tests/core/daily_summary.rs"
+
+[[test]]
+name = "weekly_review"
+path = "../tests/core/weekly_review.rs"
+
+[[test]]
+name = "privacy"
+path = "../tests/core/privacy.rs"
+
+[[test]]
+name = "hardening"
+path = "../tests/core/hardening.rs"
+
+[[test]]
+name = "lifecycle"
+path = "../tests/core/lifecycle.rs"
+
+[[test]]
+name = "shortcuts"
+path = "../tests/core/shortcuts.rs"

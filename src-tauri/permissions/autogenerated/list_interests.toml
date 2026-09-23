@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-list-interests"
+description = "Enables the list_interests command without any pre-configured scope."
+commands.allow = ["list_interests"]
+
+[[permission]]
+identifier = "deny-list-interests"
+description = "Denies the list_interests command without any pre-configured scope."
+commands.deny = ["list_interests"]

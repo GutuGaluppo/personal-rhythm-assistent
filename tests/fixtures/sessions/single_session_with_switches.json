@@ -1,0 +1,112 @@
+{
+ "description": "One app, a detour to Terminal and back. Open session; two context switches.",
+ "now": "2026-03-02T10:02:00.000Z",
+ "events": [
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:00:00.000Z",
+   "bundleId": "com.microsoft.VSCode",
+   "applicationName": "Code"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:05:00.000Z",
+   "bundleId": "com.microsoft.VSCode",
+   "applicationName": "Code"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:10:00.000Z",
+   "bundleId": "com.microsoft.VSCode",
+   "applicationName": "Code"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:15:00.000Z",
+   "bundleId": "com.microsoft.VSCode",
+   "applicationName": "Code"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:20:00.000Z",
+   "bundleId": "com.microsoft.VSCode",
+   "applicationName": "Code"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:25:00.000Z",
+   "bundleId": "com.microsoft.VSCode",
+   "applicationName": "Code"
+  },
+  {
+   "type": "application_switch",
+   "timestamp": "2026-03-02T09:30:00.000Z",
+   "fromBundleId": "com.microsoft.VSCode",
+   "toBundleId": "com.apple.Terminal"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:30:00.000Z",
+   "bundleId": "com.apple.Terminal",
+   "applicationName": "Terminal"
+  },
+  {
+   "type": "application_switch",
+   "timestamp": "2026-03-02T09:31:00.000Z",
+   "fromBundleId": "com.apple.Terminal",
+   "toBundleId": "com.microsoft.VSCode"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:31:00.000Z",
+   "bundleId": "com.microsoft.VSCode",
+   "applicationName": "Code"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:36:00.000Z",
+   "bundleId": "com.microsoft.VSCode",
+   "applicationName": "Code"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:41:00.000Z",
+   "bundleId": "com.microsoft.VSCode",
+   "applicationName": "Code"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:46:00.000Z",
+   "bundleId": "com.microsoft.VSCode",
+   "applicationName": "Code"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:51:00.000Z",
+   "bundleId": "com.microsoft.VSCode",
+   "applicationName": "Code"
+  },
+  {
+   "type": "active_application",
+   "timestamp": "2026-03-02T09:56:00.000Z",
+   "bundleId": "com.microsoft.VSCode",
+   "applicationName": "Code"
+  }
+ ],
+ "expected": [
+  {
+   "id": "session-2026-03-02T09:00:00.000Z",
+   "startedAt": "2026-03-02T09:00:00.000Z",
+   "endedAt": null,
+   "activeMinutes": 62.0,
+   "idleMinutes": 0.0,
+   "contextSwitches": 2,
+   "category": "Unknown",
+   "applicationIds": [
+    "com.microsoft.VSCode",
+    "com.apple.Terminal"
+   ],
+   "projectId": null
+  }
+ ]
+}

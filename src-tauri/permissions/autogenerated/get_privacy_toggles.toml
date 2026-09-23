@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-get-privacy-toggles"
+description = "Enables the get_privacy_toggles command without any pre-configured scope."
+commands.allow = ["get_privacy_toggles"]
+
+[[permission]]
+identifier = "deny-get-privacy-toggles"
+description = "Denies the get_privacy_toggles command without any pre-configured scope."
+commands.deny = ["get_privacy_toggles"]

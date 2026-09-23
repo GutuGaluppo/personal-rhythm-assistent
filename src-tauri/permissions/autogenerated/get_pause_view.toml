@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-get-pause-view"
+description = "Enables the get_pause_view command without any pre-configured scope."
+commands.allow = ["get_pause_view"]
+
+[[permission]]
+identifier = "deny-get-pause-view"
+description = "Denies the get_pause_view command without any pre-configured scope."
+commands.deny = ["get_pause_view"]

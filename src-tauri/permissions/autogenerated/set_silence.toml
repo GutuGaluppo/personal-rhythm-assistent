@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-set-silence"
+description = "Enables the set_silence command without any pre-configured scope."
+commands.allow = ["set_silence"]
+
+[[permission]]
+identifier = "deny-set-silence"
+description = "Denies the set_silence command without any pre-configured scope."
+commands.deny = ["set_silence"]

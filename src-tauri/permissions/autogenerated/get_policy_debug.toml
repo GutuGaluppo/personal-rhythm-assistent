@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-get-policy-debug"
+description = "Enables the get_policy_debug command without any pre-configured scope."
+commands.allow = ["get_policy_debug"]
+
+[[permission]]
+identifier = "deny-get-policy-debug"
+description = "Denies the get_policy_debug command without any pre-configured scope."
+commands.deny = ["get_policy_debug"]

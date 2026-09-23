@@ -1,0 +1,48 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+.heading {
+  margin: 0;
+  font-size: var(--font-size-title);
+}
+.state {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-16);
+}
+.wide {
+  grid-column: 1 / -1;
+}
+.stats {
+  margin: 0;
+  display: grid;
+  gap: var(--space-8);
+}
+.stat {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-16);
+}
+.stat dt {
+  color: var(--color-text-muted);
+}
+.stat dd {
+  margin: 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.muted {
+  color: var(--color-text-muted);
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-16);
+}

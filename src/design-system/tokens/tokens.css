@@ -1,0 +1,110 @@
+/*
+ * Design tokens — Design System v0.1 (docs/DESIGN_IMPLEMENTATION.md).
+ * Calm, mature, soft: pastel colors are for borders/accents/glows/chips, never
+ * large saturated panels. No red warning states, no saturated urgency colors.
+ */
+:root {
+  /* ---- raw palette (poster §2) ------------------------------------------------- */
+  --color-ice: #f8f8ff;
+  --color-deep-blue: #1e2a4a;
+  --color-soft-blue: #6fb8ff;
+  --color-mint: #6ed3b7;
+  --color-lilac: #cbb4ff;
+  --color-peach: #ffd1b8;
+  --color-aqua: #7fe8f0;
+
+  /* "I'm on fire": same serene icon language, warmer colors only (§9). Exact
+     hex values are not given by the source poster -- best-effort warm tones,
+     flagged for a visual QA pass (D8) once seen next to the approved icon. */
+  --color-on-fire-coral: #ff9d80;
+  --color-on-fire-peach: var(--color-peach);
+  --color-on-fire-amber: #ffbd6b;
+  --color-on-fire-yellow: #ffe08f;
+
+  /* ---- semantic tokens: existing names, new values --------------------------- */
+  --color-bg: var(--color-ice);
+  --color-surface: rgba(255, 255, 255, 0.6);
+  --color-bg-glass: rgba(255, 255, 255, 0.45);
+  --color-text: var(--color-deep-blue);
+  --color-text-muted: #5c6b8a;
+  --color-border: #dce3f5;
+  --color-accent: var(--color-soft-blue);
+  /* Distinct from --color-accent on purpose: Soft Blue on Ice does not clear a
+     visible-focus contrast check; Deep Blue reliably does (§18). */
+  --color-focus: var(--color-deep-blue);
+
+  /* ---- typography (§6, poster §3) --------------------------------------------- */
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+
+  --font-size-display: 2rem; /* 32px */
+  --line-height-display: 2.5rem; /* 40px */
+  --font-size-title: 1.5rem; /* 24px */
+  --line-height-title: 2rem; /* 32px */
+  --font-size-section: 1.125rem; /* 18px */
+  --line-height-section: 1.625rem; /* 26px */
+  --font-size-body: 1rem; /* 16px */
+  --line-height-body: 1.5rem; /* 24px */
+  --font-size-legend: 0.875rem; /* 14px */
+  --line-height-legend: 1.25rem; /* 20px */
+  --font-size-micro: 0.75rem; /* 12px */
+  --line-height-micro: 1rem; /* 16px */
+
+  /* ---- spacing (4/8/12/16/24/32, poster §4) ----------------------------------- */
+  --space-4: 4px;
+  --space-8: 8px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-24: 24px;
+  --space-32: 32px;
+
+  /* ---- geometry (§7, poster §4) ------------------------------------------------ */
+  --radius-sm: 8px; /* controls / chips */
+  --radius-md: 16px; /* cards */
+  --radius-lg: 24px; /* main glass panels */
+
+  /* ---- surfaces: shadow + blur (§7, poster §5) --------------------------------- */
+  --shadow-sm: 0 1px 2px rgba(30, 42, 74, 0.06), 0 2px 8px rgba(30, 42, 74, 0.05);
+  --shadow-md: 0 2px 4px rgba(30, 42, 74, 0.07), 0 8px 24px rgba(30, 42, 74, 0.08);
+  --shadow-lg: 0 4px 8px rgba(30, 42, 74, 0.08), 0 16px 40px rgba(30, 42, 74, 0.1);
+
+  --blur-sm: 20px;
+  --blur-md: 40px;
+  --blur-lg: 60px;
+
+  /* Motion — durations from IMPLEMENTATION.md §23 */
+  --motion-micro: 190ms;
+  --motion-overlay: 240ms;
+  --motion-transform: 700ms;
+  --motion-breathe: 4400ms;
+  /* Background blobs (§23, §8): slow, ambient, never competes with content. */
+  --motion-blob: 14000ms;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #10162b;
+    --color-surface: rgba(30, 42, 74, 0.55);
+    --color-bg-glass: rgba(30, 42, 74, 0.4);
+    --color-text: #eef1fb;
+    --color-text-muted: #a9b4d6;
+    --color-border: #2c3a63;
+    --color-accent: var(--color-soft-blue);
+    --color-focus: var(--color-aqua);
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.25), 0 2px 8px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.25);
+    --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.35), 0 16px 40px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Reduce Motion: transformations collapse to instant/crossfade (§15, §23). */
+:root[data-reduce-motion="true"] {
+  --motion-transform: 0ms;
+  --motion-breathe: 0ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-transform: 0ms;
+    --motion-breathe: 0ms;
+  }
+}

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-toggle-daily-plan-item"
+description = "Enables the toggle_daily_plan_item command without any pre-configured scope."
+commands.allow = ["toggle_daily_plan_item"]
+
+[[permission]]
+identifier = "deny-toggle-daily-plan-item"
+description = "Denies the toggle_daily_plan_item command without any pre-configured scope."
+commands.deny = ["toggle_daily_plan_item"]

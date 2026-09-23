@@ -1,0 +1,11 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "intervention",
+  "description": "Check-in window: it can read the current check-in, answer it, or dismiss it. Nothing else.",
+  "windows": ["intervention"],
+  "permissions": [
+    "allow-get-current-intervention",
+    "allow-answer-intervention",
+    "allow-dismiss-intervention"
+  ]
+}

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-list-app-mappings"
+description = "Enables the list_app_mappings command without any pre-configured scope."
+commands.allow = ["list_app_mappings"]
+
+[[permission]]
+identifier = "deny-list-app-mappings"
+description = "Denies the list_app_mappings command without any pre-configured scope."
+commands.deny = ["list_app_mappings"]

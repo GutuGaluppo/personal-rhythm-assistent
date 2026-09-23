@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-end-pause"
+description = "Enables the end_pause command without any pre-configured scope."
+commands.allow = ["end_pause"]
+
+[[permission]]
+identifier = "deny-end-pause"
+description = "Denies the end_pause command without any pre-configured scope."
+commands.deny = ["end_pause"]

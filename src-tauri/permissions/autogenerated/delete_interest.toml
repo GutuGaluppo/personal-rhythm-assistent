@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-delete-interest"
+description = "Enables the delete_interest command without any pre-configured scope."
+commands.allow = ["delete_interest"]
+
+[[permission]]
+identifier = "deny-delete-interest"
+description = "Denies the delete_interest command without any pre-configured scope."
+commands.deny = ["delete_interest"]

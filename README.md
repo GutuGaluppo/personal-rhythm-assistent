@@ -7,4 +7,14 @@ See:
 - `docs/IMPLEMENTATION.md`
 - `docs/MILESTONES.md`
 
-This scaffold intentionally contains structure only. Bootstrap Tauri/React after confirming the package names and current toolchain versions.
+## Development
+
+Requires Node 22+, Rust (stable) and Xcode command line tools.
+
+```sh
+npm install
+npm run tauri dev     # run the desktop app
+npm run check         # typecheck + lint + format + frontend tests + Rust tests
+```
+
+Frontend tests live in `tests/frontend`, Rust tests in `tests/core` (registered in `src-tauri/Cargo.toml`).
