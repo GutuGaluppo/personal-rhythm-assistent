@@ -1,26 +1,26 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-16);
 }
 .heading {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: var(--font-size-title);
 }
 .muted {
   margin: 0;
   color: var(--color-text-muted);
-  font-size: 0.9rem;
+  font-size: var(--font-size-legend);
 }
 .form {
   display: flex;
-  gap: var(--space-2);
+  gap: var(--space-8);
   flex-wrap: wrap;
 }
 .input {
   flex: 1;
   min-width: 220px;
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-8) var(--space-16);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
@@ -32,21 +32,21 @@
   margin: 0;
   padding: 0;
   display: grid;
-  gap: var(--space-2);
+  gap: var(--space-8);
 }
 .row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-16);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-8) var(--space-16);
 }
 .actions {
   display: flex;
-  gap: var(--space-2);
+  gap: var(--space-8);
   align-items: center;
 }
 .toggle {

@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/Card";
+import { DailyPlan } from "@/features/my-day/DailyPlan";
 import { InterestSuggestion } from "@/features/interest-inbox/InterestSuggestion";
 import { openPause } from "@/lib/tauri/commands";
 import { useNavigation } from "@/stores/navigation";
@@ -81,6 +82,10 @@ function Content({ day }: { day: MyDayData }) {
 
         <Card title="Last real break" labelledBy="card-break">
           <BreakText lastBreak={day.lastBreak} />
+        </Card>
+
+        <Card title="Today's plan" labelledBy="card-daily-plan" className={styles.wide}>
+          <DailyPlan />
         </Card>
 
         <InterestSuggestion />

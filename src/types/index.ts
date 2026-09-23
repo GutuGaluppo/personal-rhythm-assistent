@@ -112,12 +112,22 @@ export type InterventionAnswer =
 export type PauseKind = "silence" | "meditation" | "walking" | "stretching";
 export type PausePhase = "setup" | "running" | "done";
 
+export type PauseReasonKind = "breakfast" | "lunch" | "dinner" | "appointment" | "call" | "other";
+
+/** `note` only carries a value (and only matters) when `kind` is "other". */
+export type PauseReason = {
+  kind: PauseReasonKind;
+  note: string | null;
+};
+
 export type PauseView = {
   phase: PausePhase;
   kind: PauseKind;
   startedAt: string | null;
+  /** `null` for a quick, untimed pause: no deadline, no auto "done". */
   endsAt: string | null;
   durationSeconds: number | null;
+  reason: PauseReason | null;
 };
 
 export type Interest = {
@@ -125,6 +135,15 @@ export type Interest = {
   text: string;
   createdAt: string;
   archivedAt: string | null;
+};
+
+export type DailyPlanItem = {
+  id: number;
+  /** Local calendar day, "YYYY-MM-DD". */
+  day: string;
+  text: string;
+  createdAt: string;
+  doneAt: string | null;
 };
 
 export type CategoryShare = {

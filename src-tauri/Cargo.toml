@@ -79,6 +79,10 @@ name = "interest_inbox"
 path = "../tests/core/interest_inbox.rs"
 
 [[test]]
+name = "daily_plan"
+path = "../tests/core/daily_plan.rs"
+
+[[test]]
 name = "daily_summary"
 path = "../tests/core/daily_summary.rs"
 

@@ -352,7 +352,7 @@ fn a_day_that_has_not_happened_is_refused() {
 fn pauses_are_counted_in_the_local_day_they_started() {
     let r = rig();
     let insert = |id: &str, at: DateTime<Utc>| {
-        r.db.with_conn(|c| pauses::insert(c, id, &iso(at), "silence", 300))
+        r.db.with_conn(|c| pauses::insert(c, id, &iso(at), "silence", Some(300), None))
             .unwrap()
     };
     insert("late-3rd", utc(4, 2, 59)); // 23:59 local on the 3rd
@@ -597,7 +597,8 @@ fn pause_rows(db: &Database) -> Vec<(String, Option<String>)> {
 fn every_pause_that_starts_is_recorded_whatever_started_it() {
     let db = Arc::new(Database::open_in_memory().unwrap());
     let svc = pause_service(&db);
-    svc.start(PauseKind::Meditation, 5, utc(4, 15, 0)).unwrap();
+    svc.start(PauseKind::Meditation, 5, None, utc(4, 15, 0))
+        .unwrap();
     assert_eq!(pause_rows(&db), [("meditation".to_string(), None)]);
 
     svc.end(utc(4, 15, 3));
@@ -623,7 +624,9 @@ fn a_setup_screen_that_was_never_started_is_not_a_pause() {
 fn a_refused_pause_leaves_no_record() {
     let db = Arc::new(Database::open_in_memory().unwrap());
     let svc = pause_service(&db);
-    assert!(svc.start(PauseKind::Silence, 0, utc(4, 15, 0)).is_err());
+    assert!(svc
+        .start(PauseKind::Silence, 0, None, utc(4, 15, 0))
+        .is_err());
     assert!(pause_rows(&db).is_empty());
 }
 
@@ -631,7 +634,8 @@ fn a_refused_pause_leaves_no_record() {
 fn closing_the_window_also_records_when_the_pause_ended() {
     let db = Arc::new(Database::open_in_memory().unwrap());
     let svc = pause_service(&db);
-    svc.start(PauseKind::Walking, 10, utc(4, 15, 0)).unwrap();
+    svc.start(PauseKind::Walking, 10, None, utc(4, 15, 0))
+        .unwrap();
     svc.window_closed(utc(4, 15, 4));
     assert_eq!(
         pause_rows(&db)[0].1.as_deref(),
@@ -648,7 +652,7 @@ fn summaries_are_kept_indefinitely_by_default_and_pauses_follow_sessions() {
         &r,
         &session(s4(12, 0), Some(s4(13, 0)), 60.0, 2, Category::Create),
     );
-    r.db.with_conn(|c| pauses::insert(c, "p1", &iso(s4(12, 30)), "silence", 300))
+    r.db.with_conn(|c| pauses::insert(c, "p1", &iso(s4(12, 30)), "silence", Some(300), None))
         .unwrap();
     summary(&r, utc(6, 12, 0), 4);
 
@@ -705,7 +709,7 @@ fn deleting_all_local_data_removes_summaries_reflections_and_pauses() {
         &r,
         &session(s4(12, 0), Some(s4(13, 0)), 60.0, 2, Category::Create),
     );
-    r.db.with_conn(|c| pauses::insert(c, "p1", &iso(s4(12, 30)), "silence", 300))
+    r.db.with_conn(|c| pauses::insert(c, "p1", &iso(s4(12, 30)), "silence", Some(300), None))
         .unwrap();
     reflect(&r, 4, "private", utc(6, 12, 0)).unwrap();
     summary(&r, utc(6, 12, 0), 4);

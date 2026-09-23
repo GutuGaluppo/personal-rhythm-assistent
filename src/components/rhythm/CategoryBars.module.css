@@ -3,12 +3,12 @@
   margin: 0;
   padding: 0;
   display: grid;
-  gap: var(--space-2);
+  gap: var(--space-8);
 }
 .row {
   display: flex;
   justify-content: space-between;
-  gap: var(--space-3);
+  gap: var(--space-16);
   font-variant-numeric: tabular-nums;
 }
 .track {

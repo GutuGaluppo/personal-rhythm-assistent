@@ -88,7 +88,7 @@ fn the_overview_counts_and_dates_everything_that_is_stored() {
                 reasons: &[],
             },
         )?;
-        pauses::insert(c, "p1", &iso(at(3, 11)), "silence", 300)?;
+        pauses::insert(c, "p1", &iso(at(3, 11)), "silence", Some(300), None)?;
         daily_summaries::set_reflection(c, "2026-03-03", Some("hello"))?;
         interests::insert(c, "Learn WebGPU", &iso(at(2, 8)))?;
         Classification::default().set(c, "com.example", Some("Example"), Category::Learn)
@@ -209,7 +209,7 @@ fn deleting_raw_activity_keeps_everything_derived_from_it() {
         sessions::upsert(c, &session(at(2, 9), 60.0))?;
         interests::insert(c, "keep me", &iso(at(2, 8)))?;
         daily_summaries::set_reflection(c, "2026-03-02", Some("keep me too"))?;
-        pauses::insert(c, "p1", &iso(at(2, 11)), "silence", 300)
+        pauses::insert(c, "p1", &iso(at(2, 11)), "silence", Some(300), None)
     })
     .unwrap();
 

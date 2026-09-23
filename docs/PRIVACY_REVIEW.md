@@ -15,9 +15,10 @@ local SQLite file. Nothing is sent anywhere.
 | Active time | Nothing new. It turns the two above into sessions: start, end, active and idle minutes, switch count, category. | To show your day and notice long sessions. | 30 days |
 
 Derived from those, and kept on this device as well: check-ins shown and how they
-were answered (30 days), pauses started (30 days), one summary per finished day
-(indefinitely unless you set a limit), the interests you write down (until you
-delete them), the category you chose for each app, and your settings.
+were answered (30 days), pauses started (30 days, with an optional reason you pick
+or type in), one summary per finished day (indefinitely unless you set a limit),
+the interests you write down (until you delete them), today's plan items you write
+down (until you delete them), the category you chose for each app, and your settings.
 
 Not available yet, shown as "off" and impossible to switch on: window title,
 keyboard and mouse rhythm, calendar, cloud processing.
@@ -81,6 +82,10 @@ has only the ability to listen for the menu bar's "show this page" request.
 - `allow-restore-interest`
 - `allow-delete-interest`
 - `allow-get-interest-suggestion`
+- `allow-list-daily-plan`
+- `allow-add-daily-plan-item`
+- `allow-toggle-daily-plan-item`
+- `allow-delete-daily-plan-item`
 - `allow-get-daily-summary`
 - `allow-list-summary-days`
 - `allow-save-reflection`
@@ -96,12 +101,13 @@ check-in, answer it, or dismiss it. Nothing from core, and no other command.
 - `allow-answer-intervention`
 - `allow-dismiss-intervention`
 
-**Pause window** (`capabilities/pause.json`). It can read the pause, start it and end it.
-Nothing from core, and no other command.
+**Pause window** (`capabilities/pause.json`). It can read the pause, start it, end it,
+and tag a reason. Nothing from core, and no other command.
 
 - `allow-get-pause-view`
 - `allow-start-pause`
 - `allow-end-pause`
+- `allow-set-pause-reason`
 
 ## 6. Logging
 

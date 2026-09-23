@@ -1,7 +1,12 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "pause",
-  "description": "Pause window: it can read the pause, start it, and end it. Nothing else.",
+  "description": "Pause window: it can read the pause, start it, end it, and tag a reason. Nothing else.",
   "windows": ["pause"],
-  "permissions": ["allow-get-pause-view", "allow-start-pause", "allow-end-pause"]
+  "permissions": [
+    "allow-get-pause-view",
+    "allow-start-pause",
+    "allow-end-pause",
+    "allow-set-pause-reason"
+  ]
 }

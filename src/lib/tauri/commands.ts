@@ -4,6 +4,7 @@ import type {
   Category,
   ActivityEvent,
   ContextAssessment,
+  DailyPlanItem,
   DailySummary,
   DataOverview,
   InterventionAnswer,
@@ -11,6 +12,7 @@ import type {
   Interest,
   MyDay,
   PauseKind,
+  PauseReason,
   PauseView,
   PolicyDebug,
   PrivacyToggles,
@@ -48,18 +50,22 @@ export const dismissIntervention = (id: string) => invoke<void>("dismiss_interve
 /** Developer preview; records nothing. */
 export const debugShowIntervention = () => invoke<void>("debug_show_intervention");
 
-// The pause window may call only these three (see capabilities/pause.json).
+// The pause window may call only these four (see capabilities/pause.json).
 export const getPauseView = () => invoke<PauseView | null>("get_pause_view");
 
-/** `minutes` is 1-60; the presets are 3, 5 and 10. */
-export const startPause = (kind: PauseKind, minutes: number) =>
-  invoke<PauseView>("start_pause", { kind, minutes });
+/** `minutes` is 1-60; the presets are 3, 5 and 10. `reason` is optional. */
+export const startPause = (kind: PauseKind, minutes: number, reason: PauseReason | null) =>
+  invoke<PauseView>("start_pause", { kind, minutes, reason });
 
 /** Coming back, or ending early: the core clears the pause and closes the window. */
 export const endPause = () => invoke<void>("end_pause");
 
 /** From the main window: opens the pause window on its setup screen. */
 export const openPause = () => invoke<void>("open_pause");
+
+/** Attaches or changes the reason on the pause currently running. `null` clears it. */
+export const setPauseReason = (reason: PauseReason | null) =>
+  invoke<PauseView>("set_pause_reason", { reason });
 
 // ---- Interest Inbox ----
 
@@ -77,6 +83,21 @@ export const deleteInterest = (id: number) => invoke<boolean>("delete_interest",
 
 /** One suggestion per day, the same one all day; null when the inbox has nothing active. */
 export const getInterestSuggestion = () => invoke<Interest | null>("get_interest_suggestion");
+
+// ---- Today's plan ----
+
+/** Always today's items (the user's local calendar day). */
+export const listDailyPlan = () => invoke<DailyPlanItem[]>("list_daily_plan");
+
+export const addDailyPlanItem = (text: string) =>
+  invoke<DailyPlanItem>("add_daily_plan_item", { text });
+
+/** Flips done/undone; resolves to null if the item no longer exists. */
+export const toggleDailyPlanItem = (id: number) =>
+  invoke<DailyPlanItem | null>("toggle_daily_plan_item", { id });
+
+export const deleteDailyPlanItem = (id: number) =>
+  invoke<boolean>("delete_daily_plan_item", { id });
 
 // ---- Daily summary ----
 

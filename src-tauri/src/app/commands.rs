@@ -1,11 +1,13 @@
 use crate::context;
 use crate::context::engine::ContextConfig;
 use crate::context::signals::ContextAssessment;
+use crate::daily_plan;
 use crate::interest_inbox;
 use crate::interventions::manager::InterventionManager;
 use crate::interventions::model::{Answer, InterventionView};
-use crate::interventions::pause::{PauseKind, PauseService, PauseView};
+use crate::interventions::pause::{PauseKind, PauseReason, PauseService, PauseView};
 use crate::persistence::repositories::activity_events;
+use crate::persistence::repositories::daily_plan::DailyPlanItem;
 use crate::persistence::repositories::interests::Interest;
 use crate::persistence::Database;
 use crate::policy::rules::PolicyDecision;
@@ -268,21 +270,24 @@ pub fn debug_show_intervention(
     manager.preview(now, &assessment).map(|_| ()).map_err(err)
 }
 
-// ---- Pause window. These three are the ONLY commands its capability allows. ----
+// ---- Pause window. These four are the ONLY commands its capability allows. ----
 
 #[tauri::command]
 pub fn get_pause_view(pause: State<'_, Arc<PauseService>>) -> Option<PauseView> {
     pause.view(chrono::Utc::now())
 }
 
-/// `minutes` must be 1-60; the presets are 3, 5 and 10.
+/// `minutes` must be 1-60; the presets are 3, 5 and 10. `reason` is optional.
 #[tauri::command]
 pub fn start_pause(
     pause: State<'_, Arc<PauseService>>,
     kind: PauseKind,
     minutes: u32,
+    reason: Option<PauseReason>,
 ) -> Result<PauseView, String> {
-    pause.start(kind, minutes, chrono::Utc::now()).map_err(err)
+    pause
+        .start(kind, minutes, reason, chrono::Utc::now())
+        .map_err(err)
 }
 
 /// Coming back, or ending early: clears the pause and closes the window.
@@ -295,6 +300,16 @@ pub fn end_pause(pause: State<'_, Arc<PauseService>>) {
 #[tauri::command]
 pub fn open_pause(pause: State<'_, Arc<PauseService>>) {
     pause.offer(PauseKind::Silence);
+}
+
+/// Attaches or changes the reason on the currently running pause -- used by a
+/// quick pause, which starts before any reason has been chosen. `None` clears it.
+#[tauri::command]
+pub fn set_pause_reason(
+    pause: State<'_, Arc<PauseService>>,
+    reason: Option<PauseReason>,
+) -> Result<PauseView, String> {
+    pause.set_reason(reason, chrono::Utc::now()).map_err(err)
 }
 
 // ---- Interest Inbox ----
@@ -337,6 +352,40 @@ pub fn get_interest_suggestion(db: State<'_, Arc<Database>>) -> Result<Option<In
     let today = chrono::Local::now().format("%Y-%m-%d").to_string();
     db.with_conn(|c| interest_inbox::suggestion_for(c, &today))
         .map_err(err)
+}
+
+// ---- Today's plan ----
+
+/// Always scoped to today (the user's local calendar day); no history view yet.
+#[tauri::command]
+pub fn list_daily_plan(db: State<'_, Arc<Database>>) -> Result<Vec<DailyPlanItem>, String> {
+    let today = chrono::Local::now().format("%Y-%m-%d").to_string();
+    db.with_conn(|c| daily_plan::list(c, &today)).map_err(err)
+}
+
+#[tauri::command]
+pub fn add_daily_plan_item(
+    db: State<'_, Arc<Database>>,
+    text: String,
+) -> Result<DailyPlanItem, String> {
+    let today = chrono::Local::now().format("%Y-%m-%d").to_string();
+    db.with_conn(|c| daily_plan::add(c, &today, &text, chrono::Utc::now()))
+        .map_err(err)
+}
+
+/// Flips done/undone; resolves to `None` if `id` no longer exists.
+#[tauri::command]
+pub fn toggle_daily_plan_item(
+    db: State<'_, Arc<Database>>,
+    id: i64,
+) -> Result<Option<DailyPlanItem>, String> {
+    db.with_conn(|c| daily_plan::toggle(c, id, chrono::Utc::now()))
+        .map_err(err)
+}
+
+#[tauri::command]
+pub fn delete_daily_plan_item(db: State<'_, Arc<Database>>, id: i64) -> Result<bool, String> {
+    db.with_conn(|c| daily_plan::delete(c, id)).map_err(err)
 }
 
 // ---- Daily summary ----

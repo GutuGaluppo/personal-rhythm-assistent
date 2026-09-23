@@ -725,7 +725,9 @@ fn on_fire_does_not_open_a_pause() {
 #[test]
 fn nothing_interrupts_a_pause_in_progress() {
     let r = rig();
-    r.pause.start(PauseKind::Meditation, 5, t(10, 0)).unwrap();
+    r.pause
+        .start(PauseKind::Meditation, 5, None, t(10, 0))
+        .unwrap();
     // Even long after the policy cooldown a check-in must wait for the pause to end.
     let later = t(12, 0);
     assert!(r

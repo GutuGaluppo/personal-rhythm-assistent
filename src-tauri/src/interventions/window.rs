@@ -102,13 +102,14 @@ impl PausePresenter for TauriPausePresenter {
     fn show(&self) {
         let app = self.app.clone();
         let _ = self.app.run_on_main_thread(move || {
-            // Reopening while it is already up just brings it forward.
+            // Reopening while it is already up just brings it forward. The
+            // window is never destroyed between pauses (see `close`), so its
+            // page stays loaded; `set_focus` fires a DOM `focus` event the
+            // frontend uses to resync instead of trusting stale state.
             if let Some(window) = app.get_webview_window(PAUSE_WINDOW_LABEL) {
                 let _ = window.show();
                 let _ = window.set_focus();
-                return;
-            }
-            if let Err(e) = build_pause(&app) {
+            } else if let Err(e) = build_pause(&app) {
                 eprintln!("could not open the pause window: {e}");
             }
         });
@@ -117,8 +118,12 @@ impl PausePresenter for TauriPausePresenter {
     fn close(&self) {
         let app = self.app.clone();
         let _ = self.app.run_on_main_thread(move || {
+            // Hidden, not destroyed: destroying and rebuilding the same label
+            // raced with `show`'s reuse path and could surface a torn-down,
+            // blank webview. Hiding keeps the window (and its JS) around so the
+            // next `show` is instant and always has something to display.
             if let Some(window) = app.get_webview_window(PAUSE_WINDOW_LABEL) {
-                let _ = window.destroy();
+                let _ = window.hide();
             }
         });
     }
@@ -139,13 +144,26 @@ fn build_pause(app: &AppHandle) -> tauri::Result<()> {
     .focused(true)
     .build()?;
 
-    // Closed from outside (the red button): the user has left the pause.
-    window.on_window_event(move |event| {
-        if matches!(event, WindowEvent::Destroyed) {
+    // Closed some other way than through the app's own buttons (e.g. Cmd+W):
+    // hide rather than destroy, so the window stays reusable (see `close`
+    // above), and still counts as the user leaving the pause.
+    window.on_window_event(move |event| match event {
+        WindowEvent::CloseRequested { api, .. } => {
+            api.prevent_close();
+            if let Some(window) = handle.get_webview_window(PAUSE_WINDOW_LABEL) {
+                let _ = window.hide();
+            }
             if let Some(pause) = handle.try_state::<Arc<PauseService>>() {
                 pause.window_closed(Utc::now());
             }
         }
+        // Safety net for paths that do destroy the window outright (app quit).
+        WindowEvent::Destroyed => {
+            if let Some(pause) = handle.try_state::<Arc<PauseService>>() {
+                pause.window_closed(Utc::now());
+            }
+        }
+        _ => {}
     });
     Ok(())
 }

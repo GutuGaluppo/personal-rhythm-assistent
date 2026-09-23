@@ -1,0 +1,65 @@
+/*
+ * Ice canvas + 2-3 soft blurred blobs (Design System v0.1 §8): abstract, low
+ * saturation, never competing with content. Fixed behind the app shell, which
+ * sits in its own stacking context above it (see App.module.css .shell).
+ */
+.layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.5;
+  animation: drift var(--motion-blob) ease-in-out infinite;
+}
+
+.aqua {
+  top: -12%;
+  left: -8%;
+  width: 46vw;
+  height: 46vw;
+  background: var(--color-aqua);
+}
+
+.lilac {
+  bottom: -16%;
+  right: -10%;
+  width: 50vw;
+  height: 50vw;
+  background: var(--color-lilac);
+  animation-delay: calc(var(--motion-blob) / -3);
+}
+
+.peach {
+  top: 38%;
+  right: 18%;
+  width: 26vw;
+  height: 26vw;
+  background: var(--color-peach);
+  animation-delay: calc(var(--motion-blob) / -1.7);
+}
+
+@keyframes drift {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(2%, -3%) scale(1.05);
+  }
+}
+
+:root[data-reduce-motion="true"] .blob {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .blob {
+    animation: none;
+  }
+}

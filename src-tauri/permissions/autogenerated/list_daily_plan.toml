@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-list-daily-plan"
+description = "Enables the list_daily_plan command without any pre-configured scope."
+commands.allow = ["list_daily_plan"]
+
+[[permission]]
+identifier = "deny-list-daily-plan"
+description = "Denies the list_daily_plan command without any pre-configured scope."
+commands.deny = ["list_daily_plan"]

@@ -17,6 +17,7 @@ const setup: PauseView = {
   startedAt: null,
   endsAt: null,
   durationSeconds: null,
+  reason: null,
 };
 const running = (durationMin: number, kind: PauseView["kind"] = "meditation"): PauseView => ({
   phase: "running",
@@ -24,6 +25,7 @@ const running = (durationMin: number, kind: PauseView["kind"] = "meditation"): P
   startedAt: T0.toISOString(),
   endsAt: minutes(durationMin),
   durationSeconds: durationMin * 60,
+  reason: null,
 });
 
 beforeEach(() => {
@@ -33,6 +35,10 @@ beforeEach(() => {
     ...running(m, kind),
   }));
   vi.mocked(commands.endPause).mockResolvedValue();
+  vi.mocked(commands.setPauseReason).mockImplementation(async (reason) => ({
+    ...running(5),
+    reason,
+  }));
 });
 afterEach(() => {
   vi.useRealTimers();
@@ -79,7 +85,7 @@ describe("setup", () => {
     await userEvent.click(screen.getByRole("radio", { name: "Stretch" }));
     await userEvent.click(screen.getByRole("radio", { name: "10 min" }));
     await userEvent.click(screen.getByRole("button", { name: "Start" }));
-    expect(commands.startPause).toHaveBeenCalledWith("stretching", 10);
+    expect(commands.startPause).toHaveBeenCalledWith("stretching", 10, null);
     expect(await screen.findByRole("timer")).toBeInTheDocument();
   });
 
@@ -90,7 +96,7 @@ describe("setup", () => {
     await userEvent.clear(input);
     await userEvent.type(input, "17");
     await userEvent.click(screen.getByRole("button", { name: "Start" }));
-    expect(commands.startPause).toHaveBeenCalledWith("meditation", 17);
+    expect(commands.startPause).toHaveBeenCalledWith("meditation", 17, null);
   });
 
   it.each(["0", "61", "", "2.5"])("refuses a custom length of %j", async (value) => {
@@ -107,7 +113,7 @@ describe("setup", () => {
     await openAt(setup);
     expect(screen.getByRole("button", { name: "Start" })).toHaveFocus();
     await userEvent.keyboard("{Enter}");
-    expect(commands.startPause).toHaveBeenCalledWith("meditation", 5);
+    expect(commands.startPause).toHaveBeenCalledWith("meditation", 5, null);
   });
 
   it("can be declined without any fuss", async () => {
@@ -121,6 +127,48 @@ describe("setup", () => {
     await openAt(setup);
     await userEvent.keyboard("{Escape}");
     expect(commands.endPause).toHaveBeenCalled();
+  });
+});
+
+describe("reason", () => {
+  it("is optional and omitted by default", async () => {
+    await openAt(setup);
+    await userEvent.click(screen.getByRole("button", { name: "Start" }));
+    expect(commands.startPause).toHaveBeenCalledWith("meditation", 5, null);
+  });
+
+  it("a preset chip is sent as the reason", async () => {
+    await openAt(setup);
+    await userEvent.click(screen.getByRole("button", { name: "Lunch" }));
+    await userEvent.click(screen.getByRole("button", { name: "Start" }));
+    expect(commands.startPause).toHaveBeenCalledWith("meditation", 5, {
+      kind: "lunch",
+      note: null,
+    });
+  });
+
+  it("clicking the same chip again clears it", async () => {
+    await openAt(setup);
+    const lunch = screen.getByRole("button", { name: "Lunch" });
+    await userEvent.click(lunch);
+    await userEvent.click(lunch);
+    await userEvent.click(screen.getByRole("button", { name: "Start" }));
+    expect(commands.startPause).toHaveBeenCalledWith("meditation", 5, null);
+  });
+
+  it("Other needs a note before Start is enabled", async () => {
+    await openAt(setup);
+    await userEvent.click(screen.getByRole("button", { name: "Other" }));
+    expect(screen.getByRole("button", { name: "Start" })).toBeDisabled();
+    expect(screen.getByRole("alert")).toHaveTextContent(/other/i);
+
+    await userEvent.type(screen.getByLabelText("What's up?"), "waiting for a delivery");
+    expect(screen.getByRole("button", { name: "Start" })).not.toBeDisabled();
+    await userEvent.click(screen.getByRole("button", { name: "Start" }));
+    expect(commands.startPause).toHaveBeenCalledWith("meditation", 5, {
+      kind: "other",
+      note: "waiting for a delivery",
+    });
   });
 });
 
@@ -189,6 +237,68 @@ describe("running", () => {
     await userEvent.click(screen.getByRole("button", { name: "Return now" }));
     expect(commands.endPause).toHaveBeenCalled();
     expect(document.body.textContent).not.toMatch(/give up|failed|only|quit/i);
+  });
+
+  it("a reason can be tagged mid-pause without ending it", async () => {
+    await openAt(running(5));
+    await userEvent.click(screen.getByRole("button", { name: "Call" }));
+    expect(commands.setPauseReason).toHaveBeenCalledWith({ kind: "call", note: null });
+    expect(commands.endPause).not.toHaveBeenCalled();
+  });
+});
+
+describe("quick pause (untimed)", () => {
+  const untimed = (kind: PauseView["kind"] = "silence"): PauseView => ({
+    phase: "running",
+    kind,
+    startedAt: T0.toISOString(),
+    endsAt: null,
+    durationSeconds: null,
+    reason: null,
+  });
+
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true, now: T0 });
+  });
+
+  it("shows elapsed time, not a countdown, and skips setup entirely", async () => {
+    await openAt(untimed());
+    expect(screen.getByRole("heading", { name: "You're on pause." })).toBeInTheDocument();
+    expect(screen.queryByRole("timer")).not.toBeInTheDocument();
+  });
+
+  it("never becomes done on its own, however long it runs", async () => {
+    await openAt(untimed());
+    act(() => {
+      vi.setSystemTime(new Date(T0.getTime() + 90 * 60_000));
+      vi.advanceTimersByTime(600);
+    });
+    expect(screen.getByText("1h 30m so far")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Welcome back." })).not.toBeInTheDocument();
+  });
+
+  it("Back to work is the primary way out", async () => {
+    await openAt(untimed());
+    await userEvent.click(screen.getByRole("button", { name: "Back to work" }));
+    expect(commands.endPause).toHaveBeenCalled();
+  });
+});
+
+describe("resync on reopen", () => {
+  it("shows the new pause instead of staying blank when the window is reused", async () => {
+    // The window is hidden and reused between pauses rather than rebuilt (so
+    // reopening is instant): once a pause ends, the window goes quiet...
+    await openAt(setup);
+    await userEvent.click(screen.getByRole("button", { name: "Not now" }));
+    await vi.waitFor(() => expect(screen.queryByRole("main")).not.toBeInTheDocument());
+
+    // ...and when it is shown again for a new pause, it must not sit there
+    // blank until the 5s safety-net poll happens to fire.
+    vi.mocked(commands.getPauseView).mockResolvedValue({ ...setup, kind: "walking" });
+    act(() => {
+      window.dispatchEvent(new Event("focus"));
+    });
+    expect(await screen.findByRole("radio", { name: "Walk" })).toBeChecked();
   });
 });
 

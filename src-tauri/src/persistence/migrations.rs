@@ -11,6 +11,8 @@ const MIGRATIONS: &[&str] = &[
     include_str!("../../migrations/0003_interventions.sql"),
     include_str!("../../migrations/0004_interests.sql"),
     include_str!("../../migrations/0005_pauses_and_daily_summaries.sql"),
+    include_str!("../../migrations/0006_pause_quick_and_reasons.sql"),
+    include_str!("../../migrations/0007_daily_plan.sql"),
 ];
 
 pub fn latest_version() -> usize {

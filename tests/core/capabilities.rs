@@ -10,11 +10,19 @@ const INTERVENTION_WINDOW_COMMANDS: [&str; 3] = [
     "answer_intervention",
     "dismiss_intervention",
 ];
-const PAUSE_WINDOW_COMMANDS: [&str; 3] = ["get_pause_view", "start_pause", "end_pause"];
+const PAUSE_WINDOW_COMMANDS: [&str; 4] = [
+    "get_pause_view",
+    "start_pause",
+    "end_pause",
+    "set_pause_reason",
+];
 
 /// Commands that belong to a restricted window and must stay away from the main one.
 fn restricted_commands() -> Vec<&'static str> {
-    [INTERVENTION_WINDOW_COMMANDS, PAUSE_WINDOW_COMMANDS].concat()
+    INTERVENTION_WINDOW_COMMANDS
+        .into_iter()
+        .chain(PAUSE_WINDOW_COMMANDS)
+        .collect()
 }
 
 fn root() -> PathBuf {
@@ -103,7 +111,7 @@ fn the_check_in_window_can_call_exactly_three_commands_and_nothing_from_core() {
 }
 
 #[test]
-fn the_pause_window_can_call_exactly_three_commands_and_nothing_from_core() {
+fn the_pause_window_can_call_exactly_four_commands_and_nothing_from_core() {
     assert_window_is_minimal("pause.json", "pause", &PAUSE_WINDOW_COMMANDS);
 }
 

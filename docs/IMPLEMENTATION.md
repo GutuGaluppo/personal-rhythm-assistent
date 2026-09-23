@@ -943,3 +943,60 @@ Core rule:
 > Do not build reports before trustworthy sessions exist.
 > Do not build interventions before Context + Policy can explain why they appear.
 > Do not add AI before deterministic behavior feels useful.
+
+
+---
+
+## Design implementation policy
+
+> Current project status: the technical MVP is already implemented and is being used in a full-day real-world behavioral test. From this point forward, the main implementation effort is visual/design integration rather than foundational architecture.
+
+### Historical rule for early milestones
+
+Milestones 0–6 were intentionally allowed to use simplified functional UI. Production-level visual work was not required and should not have delayed persistence, activity sensing, sessionization, Context Engine, Policy Engine, or behavioral validation.
+
+The approved Design System v0.1 remained the visual source of truth, but only the architecture needed to be ready for it.
+
+### Current rule
+
+This restriction no longer applies.
+
+Because the functional application already exists, the current phase is **DESIGN IMPLEMENTATION**.
+
+The next work should focus on applying the approved visual system to the working product without altering the validated behavioral logic.
+
+The canonical source for this phase is:
+
+`docs/DESIGN_IMPLEMENTATION.md`
+
+### Frozen technical behavior
+
+Visual implementation must not silently change:
+- intervention thresholds;
+- cooldown rules;
+- daily intervention ceiling;
+- `I'm on fire` duration;
+- privacy boundaries;
+- Context Engine signal semantics;
+- Policy Engine behavior;
+- local-first rules;
+- user autonomy guarantees.
+
+If a visual change appears to require changing one of these, treat it as a separate product decision.
+
+### Canonical visual direction
+
+The approved direction is:
+- neutral ice background;
+- soft pastel palette;
+- restrained glassmorphism;
+- translucent layered surfaces;
+- gentle rounded geometry;
+- calm, human, direct typography;
+- colored borders for contextual/event cards;
+- blobs instead of photographic nature imagery;
+- official serene-eyes icon family;
+- warm approved `I'm on fire` state;
+- subtle motion based on breathe → transform → settle.
+
+Do not reintroduce alternate visual explorations unless explicitly requested.

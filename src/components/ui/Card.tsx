@@ -5,13 +5,16 @@ export function Card({
   title,
   children,
   labelledBy,
+  className,
 }: {
   title: string;
   children: ReactNode;
   labelledBy: string;
+  className?: string;
 }) {
+  const combined = className ? `${styles.card} ${className}` : styles.card;
   return (
-    <section className={styles.card} aria-labelledby={labelledBy}>
+    <section className={combined} aria-labelledby={labelledBy}>
       <h2 id={labelledBy} className={styles.title}>
         {title}
       </h2>

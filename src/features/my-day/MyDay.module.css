@@ -1,11 +1,11 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-16);
 }
 .heading {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: var(--font-size-title);
 }
 .state {
   margin: 0;
@@ -14,17 +14,20 @@
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: var(--space-3);
+  gap: var(--space-16);
+}
+.wide {
+  grid-column: 1 / -1;
 }
 .stats {
   margin: 0;
   display: grid;
-  gap: var(--space-2);
+  gap: var(--space-8);
 }
 .stat {
   display: flex;
   justify-content: space-between;
-  gap: var(--space-3);
+  gap: var(--space-16);
 }
 .stat dt {
   color: var(--color-text-muted);
@@ -41,5 +44,5 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-16);
 }

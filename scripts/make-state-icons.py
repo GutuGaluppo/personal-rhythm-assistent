@@ -1,51 +1,42 @@
-"""Placeholder menu-bar state icons (64x64 RGBA PNG, supersampled). Pure stdlib.
+"""Menu-bar state icons (64x64 RGBA PNG), derived from the approved Design
+System v0.1 art in src-tauri/icons/source/. State is never conveyed by color
+alone: the tray tooltip states it in words (see src-tauri/src/app/tray.rs).
 
-Until the approved Design System icons arrive these are deliberately plain:
-  default  filled circle
-  pause    two bars
-  on_fire  warm filled circle (a colour, not a flame; nothing animates)
-  silent   ring
-State is never conveyed by colour alone: the tray tooltip states it in words.
+The source renders are a soft glass panel that reads beautifully at app-icon
+size but washes out at 64px against the menu bar, so each is boosted
+(saturation/contrast/brightness) before downscaling -- tuned by eye, not a
+faithful 1:1 crop of the source art. Needs Pillow: pip install pillow
+
 Run from the repo root: python3 scripts/make-state-icons.py
 """
-import os, struct, zlib
+from PIL import Image, ImageEnhance
 
+SRC = "src-tauri/icons/source"
 OUT = "src-tauri/icons/tray"
-SIZE, SS = 64, 4
-TEAL, WARM, GREY = (79, 127, 138), (217, 138, 61), (120, 130, 135)
+SIZE = 64
 
-def inside(kind, x, y):
-    cx = cy = 0.5
-    dx, dy = x - cx, y - cy
-    r = (dx * dx + dy * dy) ** 0.5
-    if kind in ("default", "on_fire"):
-        return r <= 0.36
-    if kind == "silent":
-        return 0.26 <= r <= 0.38
-    if kind == "pause":
-        return (0.30 <= x <= 0.44 or 0.56 <= x <= 0.70) and 0.24 <= y <= 0.76
-    raise ValueError(kind)
+# (source file, saturation, contrast, brightness)
+STATES = {
+    "default": (f"{SRC}/dreamy_silent_meditation_app_icon.png", 2.2, 1.5, 0.92),
+    "pause": (f"{SRC}/dreamy_silent_meditation_app_icon.png", 2.2, 1.5, 0.92),
+    "silent": (f"{SRC}/dreamy_glass_silence_icon.png", 1.6, 1.3, 0.95),
+    "on_fire": (f"{SRC}/dreamy_glass_on-fire_icon.png", 1.3, 1.15, 0.97),
+}
 
-def render(kind, color):
-    rows = []
-    for py in range(SIZE):
-        row = bytearray([0])
-        for px in range(SIZE):
-            hits = sum(
-                inside(kind, (px + (sx + 0.5) / SS) / SIZE, (py + (sy + 0.5) / SS) / SIZE)
-                for sy in range(SS) for sx in range(SS)
-            )
-            row += bytes((*color, round(255 * hits / (SS * SS))))
-        rows.append(bytes(row))
-    def chunk(t, d):
-        c = struct.pack(">I", len(d)) + t + d
-        return c + struct.pack(">I", zlib.crc32(t + d) & 0xFFFFFFFF)
-    return (b"\x89PNG\r\n\x1a\n"
-            + chunk(b"IHDR", struct.pack(">IIBBBBB", SIZE, SIZE, 8, 6, 0, 0, 0))
-            + chunk(b"IDAT", zlib.compress(b"".join(rows), 9)) + chunk(b"IEND", b""))
 
-os.makedirs(OUT, exist_ok=True)
-for kind, color in [("default", TEAL), ("pause", TEAL), ("on_fire", WARM), ("silent", GREY)]:
-    with open(f"{OUT}/{kind}.png", "wb") as f:
-        f.write(render(kind, color))
-print("wrote", sorted(os.listdir(OUT)))
+def render(src_path: str, sat: float, contrast: float, brightness: float) -> Image.Image:
+    im = Image.open(src_path).convert("RGBA")
+    r, g, b, a = im.split()
+    rgb = Image.merge("RGB", (r, g, b))
+    rgb = ImageEnhance.Color(rgb).enhance(sat)
+    rgb = ImageEnhance.Contrast(rgb).enhance(contrast)
+    rgb = ImageEnhance.Brightness(rgb).enhance(brightness)
+    r2, g2, b2 = rgb.split()
+    out = Image.merge("RGBA", (r2, g2, b2, a))
+    return out.resize((SIZE, SIZE), Image.LANCZOS)
+
+
+if __name__ == "__main__":
+    for name, (src, sat, contrast, brightness) in STATES.items():
+        render(src, sat, contrast, brightness).save(f"{OUT}/{name}.png")
+    print("wrote", sorted(f"{k}.png" for k in STATES))

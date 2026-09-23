@@ -1,5 +1,6 @@
 pub mod app;
 pub mod context;
+pub mod daily_plan;
 pub mod interest_inbox;
 pub mod interventions;
 pub mod persistence;
@@ -49,13 +50,22 @@ pub fn run() {
         .plugin(
             tauri_plugin_global_shortcut::Builder::new()
                 .with_handler(|app, shortcut, event| {
-                    if event.state() == ShortcutState::Pressed
-                        && app::shortcuts::is_on_fire(shortcut)
-                    {
+                    if event.state() != ShortcutState::Pressed {
+                        return;
+                    }
+                    if app::shortcuts::is_on_fire(shortcut) {
                         if let Some(policy) = app.try_state::<Arc<PolicyService>>() {
                             let now = chrono::Utc::now();
                             let _ =
                                 policy.toggle_on_fire(now, reports::my_day::local_day_start(now));
+                        }
+                    } else if app::shortcuts::is_quick_pause(shortcut) {
+                        if let Some(pause) = app.try_state::<Arc<PauseService>>() {
+                            let now = chrono::Utc::now();
+                            if pause.start_quick(now).is_err() {
+                                // Already paused: just bring the window forward.
+                                pause.refocus_if_active();
+                            }
                         }
                     }
                 })
@@ -105,6 +115,7 @@ pub fn run() {
             let db_for_scheduler = db.clone();
             let sessions_for_scheduler = sessions.clone();
             let snapshot_for_scheduler = snapshot.clone();
+            let snapshot_for_pause_watcher = snapshot.clone();
 
             app.manage(db);
             app.manage(sessions);
@@ -118,6 +129,7 @@ pub fn run() {
                 Box::new(TauriPausePresenter::new(app.handle().clone())),
             ));
             app.manage(pause.clone());
+            interventions::presence_watcher::spawn(pause.clone(), snapshot_for_pause_watcher);
 
             let manager = Arc::new(InterventionManager::new(
                 db_for_manager,
@@ -136,6 +148,7 @@ pub fn run() {
 
             // If another app already holds the combination, the menu bar item still works.
             let _ = app.global_shortcut().register(app::shortcuts::ON_FIRE);
+            let _ = app.global_shortcut().register(app::shortcuts::QUICK_PAUSE);
             app::tray::install(app.handle(), policy.clone(), pause)?;
             app.manage(policy);
             Ok(())
@@ -174,12 +187,17 @@ pub fn run() {
             app::commands::start_pause,
             app::commands::end_pause,
             app::commands::open_pause,
+            app::commands::set_pause_reason,
             app::commands::list_interests,
             app::commands::add_interest,
             app::commands::archive_interest,
             app::commands::restore_interest,
             app::commands::delete_interest,
             app::commands::get_interest_suggestion,
+            app::commands::list_daily_plan,
+            app::commands::add_daily_plan_item,
+            app::commands::toggle_daily_plan_item,
+            app::commands::delete_daily_plan_item,
             app::commands::get_daily_summary,
             app::commands::list_summary_days,
             app::commands::save_reflection,

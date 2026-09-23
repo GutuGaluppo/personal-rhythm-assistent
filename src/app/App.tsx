@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { BackgroundBlobs } from "@/components/ui/BackgroundBlobs";
 import { onNavigate } from "@/lib/tauri/events";
 import { isPageId, pagesFor, useNavigation } from "@/stores/navigation";
 import { Page } from "./router";
@@ -25,6 +26,7 @@ export function App() {
   }, [go]);
   return (
     <div className={styles.shell}>
+      <BackgroundBlobs />
       <nav aria-label="Main" className={styles.nav}>
         <span className={styles.brand}>Personal Rhythm Assistant</span>
         {pages.map((p) => (
