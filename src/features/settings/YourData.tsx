@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Button } from "@/components/ui/Button";
 import { formatBytes, formatDuration } from "@/lib/utils/format";
 import type { ActivityEvent, TableStats } from "@/types";
 import { useDataOverview, useDeleteAll, useDeleteRaw, useRecentEvents } from "./usePrivacy";
@@ -79,14 +80,14 @@ export function YourData() {
         </table>
       )}
 
-      <button
-        type="button"
+      <Button
+        variant="ghost"
         aria-expanded={showRecent}
         aria-controls="recent-activity"
         onClick={() => setShowRecent(!showRecent)}
       >
         {showRecent ? "Hide recent activity" : "Show recent activity"}
-      </button>
+      </Button>
       {showRecent && <Recent />}
 
       <Deletion />
@@ -151,12 +152,12 @@ function Confirm({
     <div role="alertdialog" aria-labelledby={id} className={styles.confirm}>
       <p id={id}>{children}</p>
       <div className={styles.actions}>
-        <button type="button" onClick={onConfirm}>
+        <Button variant="primary" onClick={onConfirm}>
           {confirmLabel}
-        </button>
-        <button ref={cancel} type="button" onClick={onCancel}>
+        </Button>
+        <Button ref={cancel} variant="ghost" onClick={onCancel}>
           Cancel
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -179,12 +180,12 @@ function Deletion() {
     <div className={styles.danger}>
       <h3>Delete</h3>
       <div className={styles.actions}>
-        <button ref={rawTrigger} type="button" onClick={() => setConfirming("raw")}>
+        <Button ref={rawTrigger} variant="secondary" onClick={() => setConfirming("raw")}>
           Delete raw activity…
-        </button>
-        <button ref={allTrigger} type="button" onClick={() => setConfirming("all")}>
+        </Button>
+        <Button ref={allTrigger} variant="secondary" onClick={() => setConfirming("all")}>
           Delete all local data…
-        </button>
+        </Button>
       </div>
 
       {confirming === "raw" && (

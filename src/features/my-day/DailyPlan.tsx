@@ -1,4 +1,5 @@
 import { useRef, useState, type FormEvent } from "react";
+import { Button } from "@/components/ui/Button";
 import type { DailyPlanItem } from "@/types";
 import {
   useAddDailyPlanItem,
@@ -51,9 +52,9 @@ function AddForm() {
         onChange={(e) => setText(e.target.value)}
         className={styles.input}
       />
-      <button type="submit" disabled={!text.trim() || add.isPending}>
+      <Button type="submit" variant="secondary" disabled={!text.trim() || add.isPending}>
         Add
-      </button>
+      </Button>
       {add.isError && <p role="alert">Couldn&apos;t save that. Try again.</p>}
     </form>
   );
@@ -92,13 +93,13 @@ function Row({ item }: { item: DailyPlanItem }) {
         />
         <span className={done ? styles.done : undefined}>{item.text}</span>
       </label>
-      <button
-        type="button"
+      <Button
+        variant="ghost"
         aria-label={`Delete ${item.text}`}
         onClick={() => remove.mutate(item.id)}
       >
         Delete
-      </button>
+      </Button>
     </li>
   );
 }

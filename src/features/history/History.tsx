@@ -1,4 +1,5 @@
 import { useState, type KeyboardEvent } from "react";
+import { Button } from "@/components/ui/Button";
 import { DailySummaryView } from "@/features/reports/DailySummaryView";
 import { useSummaryDays } from "@/features/reports/useDailySummary";
 import { WeeklyReviewView } from "@/features/reports/WeeklyReviewView";
@@ -66,20 +67,20 @@ function DayPanel() {
   return (
     <>
       <div className={styles.nav}>
-        <button
-          type="button"
+        <Button
+          variant="ghost"
           onClick={() => setIndex(index + 1)}
           disabled={index >= days.length - 1}
         >
           Earlier day
-        </button>
+        </Button>
         <h2 className={styles.day} aria-live="polite">
           {formatDate(date)}
           <span className={styles.muted}>{isToday ? " · today so far" : ""}</span>
         </h2>
-        <button type="button" onClick={() => setIndex(index - 1)} disabled={index === 0}>
+        <Button variant="ghost" onClick={() => setIndex(index - 1)} disabled={index === 0}>
           Later day
-        </button>
+        </Button>
       </div>
 
       <DailySummaryView date={date} isToday={isToday} />

@@ -1,0 +1,6 @@
+.icon {
+  display: block;
+  border-radius: 50%;
+  object-fit: contain;
+  flex: none;
+}

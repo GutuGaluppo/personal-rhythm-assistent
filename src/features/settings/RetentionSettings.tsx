@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { Button } from "@/components/ui/Button";
 import type { RetentionPolicy, RetentionReport } from "@/types";
 import { useRetentionPolicy, useSetRetention } from "./usePrivacy";
 import styles from "./Settings.module.css";
@@ -105,9 +106,9 @@ function Form({ policy }: { policy: RetentionPolicy }) {
       {!next && <p role="alert">Each period must be a whole number of days, at least 1.</p>}
 
       <div className={styles.actions}>
-        <button type="submit" disabled={!changed || save.isPending}>
+        <Button type="submit" variant="secondary" disabled={!changed || save.isPending}>
           Save
-        </button>
+        </Button>
         {save.isSuccess && (
           <span role="status">
             {removedCount(save.data) === 0

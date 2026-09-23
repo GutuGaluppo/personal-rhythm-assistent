@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { DailyPlan } from "@/features/my-day/DailyPlan";
 import { InterestSuggestion } from "@/features/interest-inbox/InterestSuggestion";
@@ -21,9 +22,9 @@ export function MyDay() {
     <div className={styles.page}>
       <div className={styles.header}>
         <h1 className={styles.heading}>My Day</h1>
-        <button type="button" onClick={() => void openPause()}>
+        <Button variant="primary" onClick={() => void openPause()}>
           Take a break
-        </button>
+        </Button>
       </div>
       {isPending && <p role="status">Loading…</p>}
       {isError && <p role="alert">Couldn't read your day from this device.</p>}
@@ -74,9 +75,9 @@ function Content({ day }: { day: MyDayData }) {
             <Stat label="Context switches" value={String(day.contextSwitchesToday)} />
           </dl>
           <p>
-            <button type="button" onClick={() => go("history")}>
+            <Button variant="ghost" onClick={() => go("history")}>
               See the day&apos;s summary
-            </button>
+            </Button>
           </p>
         </Card>
 

@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { CategoryBars } from "@/components/rhythm/CategoryBars";
+import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { formatDuration } from "@/lib/utils/format";
 import type { DailySummary } from "@/types";
@@ -88,9 +89,13 @@ function Reflection({ summary }: { summary: DailySummary }) {
         }}
       />
       <div className={styles.actions}>
-        <button type="submit" disabled={save.isPending || text === (summary.reflection ?? "")}>
+        <Button
+          type="submit"
+          variant="secondary"
+          disabled={save.isPending || text === (summary.reflection ?? "")}
+        >
           Save
-        </button>
+        </Button>
         {save.isSuccess && <span role="status">Saved.</span>}
         {save.isError && <span role="alert">Couldn&apos;t save that.</span>}
       </div>

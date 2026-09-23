@@ -1,3 +1,4 @@
+import { forwardRef } from "react";
 import type { ButtonHTMLAttributes } from "react";
 import styles from "./Chip.module.css";
 
@@ -14,9 +15,12 @@ const VARIANT_CLASS: Record<Variant, string> = {
 };
 
 /** Design System v0.1 §6: "Chip padrão / Chip ativo / Chip sutil." */
-export function Chip({ variant = "default", className, type = "button", ...props }: Props) {
+export const Chip = forwardRef<HTMLButtonElement, Props>(function Chip(
+  { variant = "default", className, type = "button", ...props },
+  ref,
+) {
   const combined = className
     ? `${styles.chip} ${VARIANT_CLASS[variant]} ${className}`
     : `${styles.chip} ${VARIANT_CLASS[variant]}`;
-  return <button type={type} className={combined} {...props} />;
-}
+  return <button ref={ref} type={type} className={combined} {...props} />;
+});

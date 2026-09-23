@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/Button";
 import { CATEGORIES, type AppMapping, type Category, type MappingSource } from "@/types";
 import { useAppMappings, useResetAppCategory, useSetAppCategory } from "./useAppMappings";
 import styles from "./Settings.module.css";
@@ -67,13 +68,13 @@ function Row({
           ))}
         </select>
         {app.source === "user" && (
-          <button
-            type="button"
+          <Button
+            variant="ghost"
             aria-label={`Reset ${app.applicationName} to default`}
             onClick={onReset}
           >
             Reset
-          </button>
+          </Button>
         )}
       </div>
     </li>

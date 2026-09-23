@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { Button } from "@/components/ui/Button";
 import type { Interest } from "@/types";
 import {
   useAddInterest,
@@ -69,9 +70,9 @@ function AddForm() {
         onChange={(e) => setText(e.target.value)}
         className={styles.input}
       />
-      <button type="submit" disabled={!text.trim() || add.isPending}>
+      <Button type="submit" variant="secondary" disabled={!text.trim() || add.isPending}>
         Add
-      </button>
+      </Button>
       {add.isError && <p role="alert">Couldn&apos;t save that. Try again.</p>}
     </form>
   );
@@ -118,39 +119,39 @@ function Row({ interest }: { interest: Interest }) {
         {confirming ? (
           <>
             <span>Delete permanently?</span>
-            <button type="button" onClick={() => remove.mutate(interest.id)}>
+            <Button variant="primary" onClick={() => remove.mutate(interest.id)}>
               Yes, delete
-            </button>
-            <button type="button" onClick={() => setConfirming(false)}>
+            </Button>
+            <Button variant="ghost" onClick={() => setConfirming(false)}>
               Cancel
-            </button>
+            </Button>
           </>
         ) : (
           <>
             {archived ? (
-              <button
-                type="button"
+              <Button
+                variant="secondary"
                 aria-label={`Restore ${interest.text}`}
                 onClick={() => restore.mutate(interest.id)}
               >
                 Restore
-              </button>
+              </Button>
             ) : (
-              <button
-                type="button"
+              <Button
+                variant="secondary"
                 aria-label={`Archive ${interest.text}`}
                 onClick={() => archive.mutate(interest.id)}
               >
                 Archive
-              </button>
+              </Button>
             )}
-            <button
-              type="button"
+            <Button
+              variant="ghost"
               aria-label={`Delete ${interest.text}`}
               onClick={() => setConfirming(true)}
             >
               Delete
-            </button>
+            </Button>
           </>
         )}
       </div>

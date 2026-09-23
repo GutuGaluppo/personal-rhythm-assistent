@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Chip } from "@/components/ui/Chip";
+import { StateIcon } from "@/components/ui/StateIcon";
 import {
   answerIntervention,
   dismissIntervention,
@@ -90,22 +92,24 @@ function Check({
         <span aria-hidden="true">×</span>
       </button>
 
-      <p id="check-headline" className={styles.headline}>
-        {view.headline}
-      </p>
+      <div className={styles.header}>
+        <StateIcon state="intervention" size={28} />
+        <p id="check-headline" className={styles.headline}>
+          {view.headline}
+        </p>
+      </div>
       <p className={styles.question}>{question}</p>
 
       <div role="group" aria-label="Your answer" className={styles.choices}>
         {CHOICES[view.step].map((choice, i) => (
-          <button
+          <Chip
             key={choice.label}
-            type="button"
             ref={i === 0 ? firstAction : undefined}
             className={styles.choice}
             onClick={() => answer(choice.answer)}
           >
             {choice.label}
-          </button>
+          </Chip>
         ))}
       </div>
 

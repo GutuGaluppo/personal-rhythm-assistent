@@ -1,3 +1,4 @@
+import { forwardRef } from "react";
 import type { ButtonHTMLAttributes } from "react";
 import styles from "./Button.module.css";
 
@@ -14,9 +15,12 @@ const VARIANT_CLASS: Record<Variant, string> = {
 };
 
 /** Design System v0.1 §6 "Botões e controles": Primary / Secondary / Ghost. */
-export function Button({ variant = "primary", className, type = "button", ...props }: Props) {
+export const Button = forwardRef<HTMLButtonElement, Props>(function Button(
+  { variant = "primary", className, type = "button", ...props },
+  ref,
+) {
   const combined = className
     ? `${styles.button} ${VARIANT_CLASS[variant]} ${className}`
     : `${styles.button} ${VARIANT_CLASS[variant]}`;
-  return <button type={type} className={combined} {...props} />;
-}
+  return <button ref={ref} type={type} className={combined} {...props} />;
+});
